@@ -3,57 +3,70 @@
 import React from "react";
 import Link from "next/link";
 import AppShell from "@/components/AppShell";
-import TelemetryStrip from "@/components/TelemetryStrip";
 import AttackTrajectory from "@/components/AttackTrajectory";
+import CurrentStateCard from "@/components/CurrentStateCard";
+import ForecastCard from "@/components/ForecastCard";
 import WarningWindowCard from "@/components/WarningWindowCard";
-import LikelihoodChart from "@/components/LikelihoodChart";
+import ForecastEvidenceSection from "@/components/forecast/ForecastEvidenceSection";
+import AttackInterpretationFlow from "@/components/forecast/AttackInterpretationFlow";
+import ForecastResultNarrative from "@/components/ForecastResultNarrative";
 import TopologyMap from "@/components/TopologyMap";
 import { SCENARIOS } from "@/data/mockData";
-import { Sliders, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 function CommandCenterContent({ activeScenario }) {
   const scenario = activeScenario || SCENARIOS[0];
 
   return (
-    <div className="space-y-6">
-      {/* 1. Compact Telemetry Strip */}
-      <TelemetryStrip telemetry={scenario.telemetry} />
-
-      {/* 2. Hero Row: Attack Trajectory (2/3) + Warning Window (1/3) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className="lg:col-span-2">
-          <AttackTrajectory trajectory={scenario.trajectory} />
-        </div>
-        <div className="lg:col-span-1">
-          <WarningWindowCard warningWindow={scenario.warningWindow} />
-        </div>
+    <div className="space-y-8">
+      {/* 1. VISUAL HERO: Dominant Attack Trajectory Bar */}
+      <div className="w-full">
+        <AttackTrajectory trajectory={scenario.trajectory} />
       </div>
 
-      {/* 3. Second Row: Attack Likelihood (1/2) + Network Topology (1/2) */}
+      {/* 2. CORE OPERATIONAL TRIAD: Current State (1/3) + Model Forecast (1/3) + Warning Window (1/3) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        {/* Q1. WHAT IS HAPPENING NOW? */}
+        <CurrentStateCard scenario={scenario} />
+
+        {/* Q2. WHAT DOES THE MODEL FORECAST NEXT? */}
+        <ForecastCard scenario={scenario} />
+
+        {/* Q3. HOW MUCH WARNING TIME IS AVAILABLE? */}
+        <WarningWindowCard warningWindow={scenario.warningWindow} />
+      </div>
+
+      {/* 3. FORECAST SUMMARY / RESULT NARRATIVE */}
+      <ForecastResultNarrative scenario={scenario} />
+
+      {/* 4. WHY & TOPOLOGY ROW: Evidence Breakdown (1/2) + Network Topology Graph (1/2) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <LikelihoodChart data={scenario.likelihoodOverTime} />
+        {/* Q4. WHY IS THAT BEHAVIOUR BEING FORECAST? */}
+        <ForecastEvidenceSection
+          featureSignals={scenario.featureSignals}
+          temporalEvidence={scenario.temporalEvidence}
+          topologyEvidence={scenario.topologyEvidence}
+        />
+
+        {/* VISUAL COMMUNICATION GRAPH */}
         <TopologyMap topology={scenario.topology} />
       </div>
 
-      {/* 4. Bottom CTA: Simulate an Intervention */}
-      <div className="bg-surface border border-slate-200/90 rounded-xl p-4 shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-navy-800 text-white flex items-center justify-center font-mono">
-            <Sliders className="w-4 h-4 text-accent" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-navy-800 font-mono uppercase">
-              Defender Intervention Evaluator
-            </div>
-            <div className="text-[11px] font-mono text-slate-500">
-              Evaluate counterfactual defense actions to truncate projected attack trajectories.
-            </div>
-          </div>
+      {/* 4. MITRE ATT&CK BEHAVIOURAL INTERPRETATION FLOW */}
+      <AttackInterpretationFlow
+        attackInterpretation={scenario.attackInterpretation}
+      />
+
+      {/* 5. DEFENDER INTERVENTION CTA BAR */}
+      <div className="bg-surface dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 font-mono">
+        <div className="text-xs text-slate-600 dark:text-slate-400">
+          <strong className="text-navy-800 dark:text-slate-200 uppercase mr-2">Defender Intervention Evaluator:</strong>
+          <span>Evaluate counterfactual defense actions to truncate projected attack trajectories.</span>
         </div>
 
         <Link
           href="/what-if"
-          className="px-4 py-2 bg-navy-800 hover:bg-navy-700 text-white rounded-lg text-xs font-mono font-semibold transition-colors flex items-center gap-2 flex-shrink-0"
+          className="px-4 py-2 bg-navy-800 hover:bg-navy-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 flex-shrink-0"
         >
           <span>Simulate Intervention</span>
           <ArrowRight className="w-3.5 h-3.5 text-accent" />
@@ -70,3 +83,4 @@ export default function CommandCenterPage() {
     </AppShell>
   );
 }
+

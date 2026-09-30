@@ -23,7 +23,7 @@ export default function StatusBadge({ status, size = "md", customLabel, classNam
   if (isForecast) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border border-dashed rounded text-forecast bg-forecast-light border-forecast-border shadow-subtle ${sizeClasses} ${className}`}
+        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border border-dashed rounded text-forecast bg-forecast-light border-forecast-border dark:bg-indigo-950/60 dark:border-indigo-700/60 dark:text-indigo-300 shadow-subtle ${sizeClasses} ${className}`}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-forecast animate-pulse-subtle" />
         {customLabel || "FORECAST"}
@@ -34,9 +34,9 @@ export default function StatusBadge({ status, size = "md", customLabel, classNam
   if (isObserved) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border rounded text-slate-800 bg-slate-100 border-slate-300 ${sizeClasses} ${className}`}
+        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border rounded text-slate-800 bg-slate-100 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 ${sizeClasses} ${className}`}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-700 dark:bg-slate-300" />
         {customLabel || "OBSERVED"}
       </span>
     );
@@ -45,7 +45,7 @@ export default function StatusBadge({ status, size = "md", customLabel, classNam
   if (isWarning) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border rounded text-warning bg-warning-light border-warning-border ${sizeClasses} ${className}`}
+        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border rounded text-warning bg-warning-light border-warning-border dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60 ${sizeClasses} ${className}`}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse-subtle" />
         {customLabel || status}
@@ -56,7 +56,7 @@ export default function StatusBadge({ status, size = "md", customLabel, classNam
   if (isCritical) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border rounded text-critical bg-critical-light border-critical-border ${sizeClasses} ${className}`}
+        className={`inline-flex items-center gap-1.5 font-mono uppercase font-semibold border rounded text-critical bg-critical-light border-critical-border dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/60 ${sizeClasses} ${className}`}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-critical animate-ping" />
         {customLabel || status}
@@ -67,9 +67,9 @@ export default function StatusBadge({ status, size = "md", customLabel, classNam
   if (isOffline) {
     return (
       <span
-        className={`inline-flex items-center gap-1.5 font-mono uppercase text-slate-500 bg-slate-100 border border-slate-200 rounded ${sizeClasses} ${className}`}
+        className={`inline-flex items-center gap-1.5 font-mono uppercase text-slate-500 bg-slate-100 border border-slate-200 rounded dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 ${sizeClasses} ${className}`}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
         {customLabel || "OFFLINE"}
       </span>
     );
@@ -78,9 +78,9 @@ export default function StatusBadge({ status, size = "md", customLabel, classNam
   // Default normal status
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-mono uppercase text-slate-700 bg-slate-100 border border-slate-200 rounded ${sizeClasses} ${className}`}
+      className={`inline-flex items-center gap-1.5 font-mono uppercase text-slate-700 bg-slate-100 border border-slate-200 rounded dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 ${sizeClasses} ${className}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+      <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-slate-400" />
       {customLabel || status}
     </span>
   );

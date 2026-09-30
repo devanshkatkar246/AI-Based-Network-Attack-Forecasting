@@ -1,40 +1,355 @@
-export const SCENARIOS = [
+export const REPLAY_TICKS = [
   {
-    id: "Enterprise-Lateral-Movement-01",
-    title: "Lateral Movement & Domain Controller Escalation",
-    category: "Active Cyber Attack Vector",
-    riskLevel: "ELEVATED",
-    riskScore: 78,
-    warningWindowSec: 75,
-    timestamp: "2026-09-21 19:54:12 UTC",
-    currentState: "Privilege Access",
-    telemetry: {
-      activeHosts: 142,
-      activeFlows: "8.4k",
-      activeConnections: 326,
-      newEdges: 17,
-      trafficMbps: "420 Mbps",
-      networkState: "ELEVATED",
-      anomalyIndex: "+34% vs baseline"
-    },
-    networkTimeline: [
-      { time: "-60s", label: "Normal baseline traffic across subnets" },
-      { time: "-30s", label: "New SMB connection from Workstation-302" },
-      { time: "NOW", label: "East-West lateral expansion anomaly detected" }
+    tickIndex: 0,
+    timeLabel: "T-90s",
+    timestamp: "19:48:02 UTC",
+    phase: "RECONNAISSANCE",
+    networkState: "BASELINE",
+    activeHosts: 138,
+    activeFlows: "6.2k",
+    activeConnections: 180,
+    newEdges: 2,
+    trafficMbps: "310 Mbps",
+    anomalyIndex: "Baseline (0%)",
+    activeStepIndex: 0,
+    isFrozenAtCurrent: false,
+    warningWindow: null,
+    validationNotice: null,
+    trajectory: [
+      {
+        id: "step-1",
+        stage: "Reconnaissance",
+        techniqueId: "T1046",
+        techniqueName: "Network Service Discovery",
+        status: "CURRENT",
+        timestamp: "19:48:02",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.2.0/24 Subnet",
+        details: "Port scan activity across 10.0.2.0/24 targeting SMB/RPC ports.",
+        confidence: 0.98,
+        isCurrent: true
+      },
+      {
+        id: "step-2",
+        stage: "Discovery",
+        techniqueId: "T1087.002",
+        techniqueName: "Domain Account Discovery",
+        status: "PENDING",
+        estimatedTime: "T-45s",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.1.10 (DC-PRIMARY)",
+        details: "Pending telemetry stream...",
+        isCurrent: false
+      },
+      {
+        id: "step-3",
+        stage: "Privilege Access",
+        techniqueId: "T1003.001",
+        techniqueName: "LSASS Memory Dump",
+        status: "PENDING",
+        estimatedTime: "NOW",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "Local Host Process",
+        details: "Pending telemetry stream...",
+        isCurrent: false
+      },
+      {
+        id: "step-4",
+        stage: "Lateral Movement",
+        techniqueId: "T1021.002",
+        techniqueName: "SMB/PsExec Execution",
+        status: "PENDING",
+        estimatedTime: "+30s",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.4.12 (FIN-SRV-01)",
+        details: "Projected trajectory step...",
+        isCurrent: false
+      },
+      {
+        id: "step-5",
+        stage: "Command & Control",
+        techniqueId: "T1071.001",
+        techniqueName: "Encrypted Web Protocol",
+        status: "PENDING",
+        estimatedTime: "+60s",
+        sourceHost: "10.0.4.12 (FIN-SRV-01)",
+        targetHost: "198.51.100.42 (External C2)",
+        details: "Projected trajectory step...",
+        isCurrent: false
+      }
     ],
-    nextLikelyBehaviour: {
-      behaviour: "Lateral Movement",
-      timeHorizon: "+60 sec",
-      probability: 81,
+    likelihoodOverTime: [
+      { time: "-90s", observed: 15, forecast: null }
+    ],
+    topology: {
+      zones: [
+        { id: "z-internal", label: "INTERNAL WORKSTATIONS", color: "bg-slate-100/50 border-slate-200" },
+        { id: "z-servers", label: "PRODUCTION SERVERS", color: "bg-blue-50/40 border-blue-200/50" }
+      ],
+      nodes: [
+        { id: "n1", label: "GW-Router-01", type: "gateway", ip: "10.0.0.1", status: "clean", zone: "INTERNAL", x: 80, y: 150, connections: 12, newEdges: 1 },
+        { id: "n3", label: "Workstation-302", type: "host", ip: "10.0.2.45", status: "targeted", zone: "INTERNAL", x: 240, y: 220, connections: 4, newEdges: 2 }
+      ],
+      edges: [
+        { source: "n1", target: "n3", status: "OBSERVED", type: "normal", label: "DHCP/DNS Probe" }
+      ]
+    }
+  },
+  {
+    tickIndex: 1,
+    timeLabel: "T-45s",
+    timestamp: "19:50:45 UTC",
+    phase: "DISCOVERY",
+    networkState: "MONITORED",
+    activeHosts: 140,
+    activeFlows: "7.1k",
+    activeConnections: 240,
+    newEdges: 5,
+    trafficMbps: "360 Mbps",
+    anomalyIndex: "+12% vs baseline",
+    activeStepIndex: 1,
+    isFrozenAtCurrent: false,
+    warningWindow: null,
+    validationNotice: null,
+    trajectory: [
+      {
+        id: "step-1",
+        stage: "Reconnaissance",
+        techniqueId: "T1046",
+        techniqueName: "Network Service Discovery",
+        status: "OBSERVED",
+        timestamp: "19:48:02",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.2.0/24 Subnet",
+        details: "Port scan activity across 10.0.2.0/24 targeting SMB/RPC ports.",
+        confidence: 0.98,
+        isCurrent: false
+      },
+      {
+        id: "step-2",
+        stage: "Discovery",
+        techniqueId: "T1087.002",
+        techniqueName: "Domain Account Discovery",
+        status: "CURRENT",
+        timestamp: "19:50:45",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.1.10 (DC-PRIMARY)",
+        details: "LDAP enumeration queries for Domain Admin privileges.",
+        confidence: 0.94,
+        isCurrent: true
+      },
+      {
+        id: "step-3",
+        stage: "Privilege Access",
+        techniqueId: "T1003.001",
+        techniqueName: "LSASS Memory Dump",
+        status: "PENDING",
+        estimatedTime: "NOW",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "Local Host Process",
+        details: "Pending telemetry stream...",
+        isCurrent: false
+      },
+      {
+        id: "step-4",
+        stage: "Lateral Movement",
+        techniqueId: "T1021.002",
+        techniqueName: "SMB/PsExec Execution",
+        status: "PENDING",
+        estimatedTime: "+30s",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.4.12 (FIN-SRV-01)",
+        details: "Projected trajectory step...",
+        isCurrent: false
+      },
+      {
+        id: "step-5",
+        stage: "Command & Control",
+        techniqueId: "T1071.001",
+        techniqueName: "Encrypted Web Protocol",
+        status: "PENDING",
+        estimatedTime: "+60s",
+        sourceHost: "10.0.4.12 (FIN-SRV-01)",
+        targetHost: "198.51.100.42 (External C2)",
+        details: "Projected trajectory step...",
+        isCurrent: false
+      }
+    ],
+    likelihoodOverTime: [
+      { time: "-90s", observed: 15, forecast: null },
+      { time: "-45s", observed: 42, forecast: null }
+    ],
+    topology: {
+      zones: [
+        { id: "z-internal", label: "INTERNAL WORKSTATIONS", color: "bg-slate-100/50 border-slate-200" },
+        { id: "z-servers", label: "PRODUCTION SERVERS", color: "bg-blue-50/40 border-blue-200/50" }
+      ],
+      nodes: [
+        { id: "n1", label: "GW-Router-01", type: "gateway", ip: "10.0.0.1", status: "clean", zone: "INTERNAL", x: 80, y: 150, connections: 12, newEdges: 1 },
+        { id: "n2", label: "DC-PRIMARY", type: "dc", ip: "10.0.1.10", status: "targeted", zone: "SERVERS", x: 240, y: 80, connections: 24, newEdges: 3 },
+        { id: "n3", label: "Workstation-302", type: "host", ip: "10.0.2.45", status: "compromised", zone: "INTERNAL", x: 240, y: 220, connections: 8, newEdges: 5 }
+      ],
+      edges: [
+        { source: "n1", target: "n2", status: "OBSERVED", type: "normal", label: "HTTPS/LDAP" },
+        { source: "n3", target: "n2", status: "OBSERVED", type: "suspicious", label: "Suspicious RPC Scan" }
+      ]
+    }
+  },
+  {
+    tickIndex: 2,
+    timeLabel: "NOW",
+    timestamp: "19:53:30 UTC",
+    phase: "CURRENT_STATE_FREEZE",
+    networkState: "ELEVATED",
+    activeHosts: 142,
+    activeFlows: "8.4k",
+    activeConnections: 326,
+    newEdges: 17,
+    trafficMbps: "420 Mbps",
+    anomalyIndex: "+34% vs baseline",
+    activeStepIndex: 2,
+    isFrozenAtCurrent: true,
+    warningWindow: {
+      durationSec: 75,
+      horizonLabel: "60–90 SEC WINDOW",
+      urgency: "HIGH",
+      timeRemainingSec: 75,
+      impact: "Domain Credential Theft & Financial Server Compromise",
       targetAsset: "FIN-SRV-01 (10.0.4.12)",
-      impact: "Domain Admin Credential Theft & Database Access"
+      recommendedAction: "Isolate Host 10.0.2.45 & Block Port 445 on Subnet 10.0.4.0/24"
     },
-    horizonData: [
-      { horizon: "+30s", probability: 64, label: "Medium Likelihood" },
-      { horizon: "+60s", probability: 81, label: "Peak Forecast" },
-      { horizon: "+90s", probability: 58, label: "Secondary Vector" },
-      { horizon: "+120s", probability: 42, label: "Extended Horizon" }
+    validationNotice: null,
+    trajectory: [
+      {
+        id: "step-1",
+        stage: "Reconnaissance",
+        techniqueId: "T1046",
+        techniqueName: "Network Service Discovery",
+        status: "OBSERVED",
+        timestamp: "19:48:02",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.2.0/24 Subnet",
+        details: "Port scan activity across 10.0.2.0/24 targeting SMB/RPC ports.",
+        confidence: 0.98,
+        isCurrent: false
+      },
+      {
+        id: "step-2",
+        stage: "Discovery",
+        techniqueId: "T1087.002",
+        techniqueName: "Domain Account Discovery",
+        status: "OBSERVED",
+        timestamp: "19:50:45",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.1.10 (DC-PRIMARY)",
+        details: "LDAP enumeration queries for Domain Admin privileges.",
+        confidence: 0.94,
+        isCurrent: false
+      },
+      {
+        id: "step-3",
+        stage: "Privilege Access",
+        techniqueId: "T1003.001",
+        techniqueName: "LSASS Memory Dump",
+        status: "CURRENT",
+        timestamp: "19:53:30",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "Local Host Process",
+        details: "Unusual handle open to lsass.exe process by elevated user token.",
+        confidence: 0.96,
+        isCurrent: true
+      },
+      {
+        id: "step-4",
+        stage: "Lateral Movement",
+        techniqueId: "T1021.002",
+        techniqueName: "SMB/PsExec Execution",
+        status: "FORECAST",
+        estimatedTime: "+30s",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.4.12 (FIN-SRV-01)",
+        details: "Projected SMB authentication attempt using dumped NTLM hash.",
+        confidence: 0.88,
+        probability: 64,
+        isCurrent: false
+      },
+      {
+        id: "step-5",
+        stage: "Command & Control",
+        techniqueId: "T1071.001",
+        techniqueName: "Encrypted Web Protocol",
+        status: "FORECAST",
+        estimatedTime: "+60s",
+        sourceHost: "10.0.4.12 (FIN-SRV-01)",
+        targetHost: "198.51.100.42 (External C2)",
+        details: "Projected beacon establishing encrypted outbound tunnel.",
+        confidence: 0.82,
+        probability: 81,
+        isCurrent: false
+      }
     ],
+    likelihoodOverTime: [
+      { time: "T-90s", observed: 15, forecast: null, upper: null, lower: null },
+      { time: "T-60s", observed: 42, forecast: null, upper: null, lower: null },
+      { time: "NOW", observed: 68, forecast: 68, upper: 72, lower: 64 },
+      { time: "+30s", observed: null, forecast: 64, upper: 72, lower: 56 },
+      { time: "+60s", observed: null, forecast: 81, upper: 88, lower: 74 },
+      { time: "+90s", observed: null, forecast: 58, upper: 65, lower: 50 }
+    ],
+    topology: {
+      zones: [
+        { id: "z-internal", label: "INTERNAL WORKSTATIONS", color: "bg-slate-100/50 border-slate-200" },
+        { id: "z-servers", label: "PRODUCTION SERVERS", color: "bg-blue-50/40 border-blue-200/50" },
+        { id: "z-db", label: "DATABASE CLUSTER", color: "bg-amber-50/40 border-amber-200/50" },
+        { id: "z-external", label: "EXTERNAL WAN", color: "bg-red-50/30 border-red-200/40" }
+      ],
+      nodes: [
+        { id: "n1", label: "GW-Router-01", type: "gateway", ip: "10.0.0.1", status: "clean", zone: "INTERNAL", x: 80, y: 150, connections: 12, newEdges: 1 },
+        { id: "n2", label: "DC-PRIMARY", type: "dc", ip: "10.0.1.10", status: "targeted", zone: "SERVERS", x: 240, y: 80, connections: 24, newEdges: 3 },
+        { id: "n3", label: "Workstation-302", type: "host", ip: "10.0.2.45", status: "compromised", zone: "INTERNAL", x: 240, y: 220, connections: 8, newEdges: 5 },
+        { id: "n4", label: "FIN-SRV-01", type: "server", ip: "10.0.4.12", status: "forecasted-target", zone: "SERVERS", x: 440, y: 150, connections: 6, newEdges: 3 },
+        { id: "n5", label: "DB-CLUSTER-01", type: "db", ip: "10.0.4.50", status: "at-risk", zone: "DATABASE", x: 600, y: 150, connections: 4, newEdges: 1 },
+        { id: "n6", label: "External C2", type: "external", ip: "198.51.100.42", status: "external", zone: "EXTERNAL", x: 740, y: 80, connections: 2, newEdges: 2 }
+      ],
+      edges: [
+        { source: "n1", target: "n2", status: "OBSERVED", type: "normal", label: "HTTPS/LDAP" },
+        { source: "n1", target: "n3", status: "OBSERVED", type: "normal", label: "DHCP/DNS" },
+        { source: "n3", target: "n2", status: "OBSERVED", type: "suspicious", label: "Suspicious RPC Scan" },
+        { source: "n3", target: "n4", status: "FORECAST", type: "forecast", label: "Projected SMB PsExec" },
+        { source: "n4", target: "n5", status: "FORECAST", type: "forecast", label: "Projected SQL Query" },
+        { source: "n4", target: "n6", status: "FORECAST", type: "forecast", label: "Projected C2 Tunnel" }
+      ]
+    }
+  },
+  {
+    tickIndex: 3,
+    timeLabel: "+30s",
+    timestamp: "19:54:00 UTC",
+    phase: "ACTUAL_LATERAL_MOVEMENT",
+    networkState: "HIGH RISK",
+    activeHosts: 142,
+    activeFlows: "9.8k",
+    activeConnections: 380,
+    newEdges: 21,
+    trafficMbps: "580 Mbps",
+    anomalyIndex: "+58% vs baseline",
+    activeStepIndex: 3,
+    isFrozenAtCurrent: false,
+    warningWindow: {
+      durationSec: 45,
+      horizonLabel: "30 SEC WINDOW",
+      urgency: "CRITICAL",
+      timeRemainingSec: 45,
+      impact: "Financial Server Compromise & Active C2 Tunnel Staging",
+      targetAsset: "198.51.100.42 (External C2)",
+      recommendedAction: "Isolate Host FIN-SRV-01 (10.0.4.12) & Sever Outbound Port 443"
+    },
+    validationNotice: {
+      title: "FORECAST PRECEDED OBSERVED EVENT",
+      subtitle: "The projected SMB/PsExec Lateral Movement (T1021.002) at +30s was subsequently observed and verified on host FIN-SRV-01 (10.0.4.12).",
+      confidence: "Verified by Telemetry Flow #8902",
+      badgeText: "FORECAST VALIDATED"
+    },
     trajectory: [
       {
         id: "step-1",
@@ -73,21 +388,22 @@ export const SCENARIOS = [
         targetHost: "Local Host Process",
         details: "Unusual handle open to lsass.exe process by elevated user token.",
         confidence: 0.96,
-        isCurrent: true
+        isCurrent: false
       },
       {
         id: "step-4",
         stage: "Lateral Movement",
         techniqueId: "T1021.002",
         techniqueName: "SMB/PsExec Execution",
-        status: "FORECAST",
-        estimatedTime: "+30s",
+        status: "ACTUAL",
+        timestamp: "19:54:00",
         sourceHost: "10.0.2.45 (Workstation-302)",
         targetHost: "10.0.4.12 (FIN-SRV-01)",
-        details: "Predicted SMB authentication attempt using dumped NTLM hash.",
-        confidence: 0.88,
+        details: "SMB authentication using dumped NTLM hash (MATCHED FORECAST).",
+        confidence: 0.99,
         probability: 64,
-        isCurrent: false
+        isCurrent: false,
+        wasPredicted: true
       },
       {
         id: "step-5",
@@ -102,38 +418,214 @@ export const SCENARIOS = [
         confidence: 0.82,
         probability: 81,
         isCurrent: false
-      },
-      {
-        id: "step-6",
-        stage: "Exfiltration",
-        techniqueId: "T1041",
-        techniqueName: "Exfiltration Over C2 Channel",
-        status: "FORECAST",
-        estimatedTime: "+90s",
-        sourceHost: "10.0.4.12 (FIN-SRV-01)",
-        targetHost: "External C2 Storage",
-        details: "Potential automated data staging and outbound transfer.",
-        confidence: 0.71,
-        probability: 58,
-        isCurrent: false
       }
     ],
-    warningWindow: {
-      durationSec: 75,
-      horizonLabel: "60–90 SEC WINDOW",
-      urgency: "HIGH",
-      timeRemainingSec: 52,
-      impact: "Domain Credential Breach & Financial Server Compromise",
-      targetAsset: "FIN-SRV-01 (10.0.4.12)",
-      recommendedAction: "Isolate Host 10.0.2.45 & Block Port 445 on Subnet 10.0.4.0/24"
-    },
     likelihoodOverTime: [
-      { time: "NOW", observed: 68, forecast: 68, upper: 72, lower: 64 },
-      { time: "+30s", observed: null, forecast: 64, upper: 74, lower: 54 },
-      { time: "+60s", observed: null, forecast: 81, upper: 89, lower: 73 },
-      { time: "+90s", observed: null, forecast: 58, upper: 68, lower: 48 },
-      { time: "+120s", observed: null, forecast: 42, upper: 55, lower: 30 }
+      { time: "-90s", observed: 15, forecast: null },
+      { time: "-45s", observed: 42, forecast: null },
+      { time: "NOW", observed: 68, forecast: 68 },
+      { time: "+30s", observed: 78, forecast: 64 },
+      { time: "+60s", observed: null, forecast: 81 },
+      { time: "+90s", observed: null, forecast: 58 }
     ],
+    topology: {
+      zones: [
+        { id: "z-internal", label: "INTERNAL WORKSTATIONS", color: "bg-slate-100/50 border-slate-200" },
+        { id: "z-servers", label: "PRODUCTION SERVERS", color: "bg-blue-50/40 border-blue-200/50" },
+        { id: "z-db", label: "DATABASE CLUSTER", color: "bg-amber-50/40 border-amber-200/50" },
+        { id: "z-external", label: "EXTERNAL WAN", color: "bg-red-50/30 border-red-200/40" }
+      ],
+      nodes: [
+        { id: "n1", label: "GW-Router-01", type: "gateway", ip: "10.0.0.1", status: "clean", zone: "INTERNAL", x: 80, y: 150, connections: 12, newEdges: 1 },
+        { id: "n2", label: "DC-PRIMARY", type: "dc", ip: "10.0.1.10", status: "targeted", zone: "SERVERS", x: 240, y: 80, connections: 24, newEdges: 3 },
+        { id: "n3", label: "Workstation-302", type: "host", ip: "10.0.2.45", status: "compromised", zone: "INTERNAL", x: 240, y: 220, connections: 8, newEdges: 5 },
+        { id: "n4", label: "FIN-SRV-01", type: "server", ip: "10.0.4.12", status: "compromised", zone: "SERVERS", x: 440, y: 150, connections: 9, newEdges: 5 },
+        { id: "n5", label: "DB-CLUSTER-01", type: "db", ip: "10.0.4.50", status: "at-risk", zone: "DATABASE", x: 600, y: 150, connections: 4, newEdges: 1 },
+        { id: "n6", label: "External C2", type: "external", ip: "198.51.100.42", status: "forecasted-target", zone: "EXTERNAL", x: 740, y: 80, connections: 2, newEdges: 2 }
+      ],
+      edges: [
+        { source: "n1", target: "n2", status: "OBSERVED", type: "normal", label: "HTTPS/LDAP" },
+        { source: "n1", target: "n3", status: "OBSERVED", type: "normal", label: "DHCP/DNS" },
+        { source: "n3", target: "n2", status: "OBSERVED", type: "suspicious", label: "Suspicious RPC Scan" },
+        { source: "n3", target: "n4", status: "ACTUAL", type: "suspicious", label: "ACTUAL: SMB PsExec Executed" },
+        { source: "n4", target: "n5", status: "FORECAST", type: "forecast", label: "Projected SQL Query" },
+        { source: "n4", target: "n6", status: "FORECAST", type: "forecast", label: "Projected C2 Tunnel" }
+      ]
+    }
+  },
+  {
+    tickIndex: 4,
+    timeLabel: "+60s",
+    timestamp: "19:54:30 UTC",
+    phase: "ACTUAL_C2_ESTABLISHED",
+    networkState: "CRITICAL BREACH",
+    activeHosts: 142,
+    activeFlows: "12.4k",
+    activeConnections: 440,
+    newEdges: 28,
+    trafficMbps: "840 Mbps",
+    anomalyIndex: "+84% vs baseline",
+    activeStepIndex: 4,
+    isFrozenAtCurrent: false,
+    warningWindow: {
+      durationSec: 15,
+      horizonLabel: "15 SEC WINDOW",
+      urgency: "CRITICAL",
+      timeRemainingSec: 15,
+      impact: "Data Exfiltration Imminent via Encrypted C2 Tunnel",
+      targetAsset: "External Storage (198.51.100.42)",
+      recommendedAction: "Sever Outbound Port 443 at GW-Router-01 & Isolate Host 10.0.4.12"
+    },
+    validationNotice: {
+      title: "2 / 2 FORECASTED STAGES VERIFIED BY ACTUAL TELEMETRY",
+      subtitle: "Both Lateral Movement (+30s) and Encrypted C2 Beaconing (+60s) occurred matching the temporal trajectory.",
+      confidence: "Trajectory Precision Verified Across Network Nodes",
+      badgeText: "TRAJECTORY VERIFIED"
+    },
+    trajectory: [
+      {
+        id: "step-1",
+        stage: "Reconnaissance",
+        techniqueId: "T1046",
+        techniqueName: "Network Service Discovery",
+        status: "OBSERVED",
+        timestamp: "19:48:02",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.2.0/24 Subnet",
+        details: "Port scan activity across 10.0.2.0/24 targeting SMB/RPC ports.",
+        confidence: 0.98,
+        isCurrent: false
+      },
+      {
+        id: "step-2",
+        stage: "Discovery",
+        techniqueId: "T1087.002",
+        techniqueName: "Domain Account Discovery",
+        status: "OBSERVED",
+        timestamp: "19:50:45",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.1.10 (DC-PRIMARY)",
+        details: "LDAP enumeration queries for Domain Admin privileges.",
+        confidence: 0.94,
+        isCurrent: false
+      },
+      {
+        id: "step-3",
+        stage: "Privilege Access",
+        techniqueId: "T1003.001",
+        techniqueName: "LSASS Memory Dump",
+        status: "OBSERVED",
+        timestamp: "19:53:30",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "Local Host Process",
+        details: "Unusual handle open to lsass.exe process by elevated user token.",
+        confidence: 0.96,
+        isCurrent: false
+      },
+      {
+        id: "step-4",
+        stage: "Lateral Movement",
+        techniqueId: "T1021.002",
+        techniqueName: "SMB/PsExec Execution",
+        status: "ACTUAL",
+        timestamp: "19:54:00",
+        sourceHost: "10.0.2.45 (Workstation-302)",
+        targetHost: "10.0.4.12 (FIN-SRV-01)",
+        details: "SMB authentication using dumped NTLM hash (MATCHED FORECAST).",
+        confidence: 0.99,
+        probability: 64,
+        isCurrent: false,
+        wasPredicted: true
+      },
+      {
+        id: "step-5",
+        stage: "Command & Control",
+        techniqueId: "T1071.001",
+        techniqueName: "Encrypted Web Protocol",
+        status: "ACTUAL",
+        timestamp: "19:54:30",
+        sourceHost: "10.0.4.12 (FIN-SRV-01)",
+        targetHost: "198.51.100.42 (External C2)",
+        details: "Outbound HTTPS tunnel established (MATCHED FORECAST).",
+        confidence: 0.95,
+        probability: 81,
+        isCurrent: false,
+        wasPredicted: true
+      }
+    ],
+    likelihoodOverTime: [
+      { time: "-90s", observed: 15, forecast: null },
+      { time: "-45s", observed: 42, forecast: null },
+      { time: "NOW", observed: 68, forecast: 68 },
+      { time: "+30s", observed: 78, forecast: 64 },
+      { time: "+60s", observed: 88, forecast: 81 },
+      { time: "+90s", observed: null, forecast: 58 }
+    ],
+    topology: {
+      zones: [
+        { id: "z-internal", label: "INTERNAL WORKSTATIONS", color: "bg-slate-100/50 border-slate-200" },
+        { id: "z-servers", label: "PRODUCTION SERVERS", color: "bg-blue-50/40 border-blue-200/50" },
+        { id: "z-db", label: "DATABASE CLUSTER", color: "bg-amber-50/40 border-amber-200/50" },
+        { id: "z-external", label: "EXTERNAL WAN", color: "bg-red-50/30 border-red-200/40" }
+      ],
+      nodes: [
+        { id: "n1", label: "GW-Router-01", type: "gateway", ip: "10.0.0.1", status: "clean", zone: "INTERNAL", x: 80, y: 150, connections: 12, newEdges: 1 },
+        { id: "n2", label: "DC-PRIMARY", type: "dc", ip: "10.0.1.10", status: "targeted", zone: "SERVERS", x: 240, y: 80, connections: 24, newEdges: 3 },
+        { id: "n3", label: "Workstation-302", type: "host", ip: "10.0.2.45", status: "compromised", zone: "INTERNAL", x: 240, y: 220, connections: 8, newEdges: 5 },
+        { id: "n4", label: "FIN-SRV-01", type: "server", ip: "10.0.4.12", status: "compromised", zone: "SERVERS", x: 440, y: 150, connections: 9, newEdges: 5 },
+        { id: "n5", label: "DB-CLUSTER-01", type: "db", ip: "10.0.4.50", status: "at-risk", zone: "DATABASE", x: 600, y: 150, connections: 4, newEdges: 1 },
+        { id: "n6", label: "External C2", type: "external", ip: "198.51.100.42", status: "compromised", zone: "EXTERNAL", x: 740, y: 80, connections: 6, newEdges: 4 }
+      ],
+      edges: [
+        { source: "n1", target: "n2", status: "OBSERVED", type: "normal", label: "HTTPS/LDAP" },
+        { source: "n1", target: "n3", status: "OBSERVED", type: "normal", label: "DHCP/DNS" },
+        { source: "n3", target: "n2", status: "OBSERVED", type: "suspicious", label: "Suspicious RPC Scan" },
+        { source: "n3", target: "n4", status: "ACTUAL", type: "suspicious", label: "ACTUAL: SMB PsExec" },
+        { source: "n4", target: "n6", status: "ACTUAL", type: "suspicious", label: "ACTUAL: Encrypted C2 Beacon" }
+      ]
+    }
+  }
+];
+
+export const SCENARIOS = [
+  {
+    id: "Enterprise-Lateral-Movement-01",
+    title: "Lateral Movement & Domain Controller Escalation",
+    category: "Active Cyber Attack Vector",
+    riskLevel: "ELEVATED",
+    riskScore: 78,
+    warningWindowSec: 75,
+    timestamp: "2026-09-21 19:54:12 UTC",
+    currentState: "Privilege Access",
+    telemetry: {
+      activeHosts: 142,
+      activeFlows: "8.4k",
+      activeConnections: 326,
+      newEdges: 17,
+      trafficMbps: "420 Mbps",
+      networkState: "ELEVATED",
+      anomalyIndex: "+34% vs baseline"
+    },
+    networkTimeline: [
+      { time: "T-90s", label: "Port probing across 10.0.2.0/24 subnet" },
+      { time: "T-60s", label: "LDAP domain account enumeration to DC-PRIMARY" },
+      { time: "NOW", label: "LSASS process memory dump handle open detected" }
+    ],
+    nextLikelyBehaviour: {
+      behaviour: "Lateral Movement",
+      timeHorizon: "+30 sec",
+      probability: 64,
+      targetAsset: "FIN-SRV-01 (10.0.4.12)",
+      impact: "Domain Admin Credential Theft & Financial Server Compromise"
+    },
+    horizonData: [
+      { horizon: "+30s", probability: 64, label: "Medium Likelihood", stage: "Lateral Movement", technique: "SMB/PsExec Execution (T1021.002)", targetAsset: "FIN-SRV-01 (10.0.4.12)", warningSec: 30 },
+      { horizon: "+60s", probability: 81, label: "Peak Forecast", stage: "Command & Control", technique: "Encrypted Web Protocol (T1071.001)", targetAsset: "198.51.100.42 (External C2)", warningSec: 60 },
+      { horizon: "+90s", probability: 58, label: "Secondary Vector", stage: "Exfiltration", technique: "Exfiltration Over C2 Channel (T1041)", targetAsset: "External WAN Storage", warningSec: 90 }
+    ],
+    trajectory: REPLAY_TICKS[2].trajectory,
+    warningWindow: REPLAY_TICKS[2].warningWindow,
+    likelihoodOverTime: REPLAY_TICKS[2].likelihoodOverTime,
     featureSignals: [
       { feature: "Destination Diversity", weight: 24 },
       { feature: "TCP SYN Sweep Rate", weight: 21 },
@@ -141,10 +633,9 @@ export const SCENARIOS = [
       { feature: "Inter-Arrival Time (IAT) Variance", weight: 13 }
     ],
     temporalEvidence: [
-      { time: "T-40s", label: "Port probing across 10.0.2.0/24" },
-      { time: "T-20s", label: "Destination IP expansion to 10.0.1.10" },
-      { time: "T-10s", label: "SMB/RPC authorization attempt burst" },
-      { time: "NOW", label: "East-west traffic pattern anomaly detected" }
+      { time: "T-90s", stage: "Reconnaissance", label: "Port probing targeting SMB/RPC ports across 10.0.2.0/24 subnet" },
+      { time: "T-60s", stage: "Discovery", label: "LDAP domain admin account enumeration to DC-PRIMARY (10.0.1.10)" },
+      { time: "NOW", stage: "Privilege Access", label: "LSASS process memory dump handle open detected on Workstation-302" }
     ],
     topologyEvidence: {
       nodes: [
@@ -170,34 +661,7 @@ export const SCENARIOS = [
         tactic: "Command & Control"
       }
     ],
-    topology: {
-      zones: [
-        { id: "z-internal", label: "INTERNAL WORKSTATIONS", color: "bg-slate-100/50 border-slate-200" },
-        { id: "z-servers", label: "PRODUCTION SERVERS", color: "bg-blue-50/40 border-blue-200/50" },
-        { id: "z-db", label: "DATABASE CLUSTER", color: "bg-amber-50/40 border-amber-200/50" },
-        { id: "z-external", label: "EXTERNAL WAN", color: "bg-red-50/30 border-red-200/40" }
-      ],
-      nodes: [
-        { id: "n1", label: "GW-Router-01", type: "gateway", ip: "10.0.0.1", status: "clean", zone: "INTERNAL", x: 80, y: 150, connections: 12, newEdges: 1 },
-        { id: "n2", label: "DC-PRIMARY", type: "dc", ip: "10.0.1.10", status: "targeted", zone: "SERVERS", x: 240, y: 80, connections: 24, newEdges: 3 },
-        { id: "n3", label: "Workstation-302", type: "host", ip: "10.0.2.45", status: "compromised", zone: "INTERNAL", x: 240, y: 220, connections: 8, newEdges: 5 },
-        { id: "n4", label: "FIN-SRV-01", type: "server", ip: "10.0.4.12", status: "forecasted-target", zone: "SERVERS", x: 440, y: 150, connections: 6, newEdges: 3 },
-        { id: "n5", label: "DB-CLUSTER-01", type: "db", ip: "10.0.4.50", status: "at-risk", zone: "DATABASE", x: 600, y: 150, connections: 4, newEdges: 1 },
-        { id: "n6", label: "External C2", type: "external", ip: "198.51.100.42", status: "external", zone: "EXTERNAL", x: 740, y: 80, connections: 2, newEdges: 2 },
-        { id: "n7", label: "App-Server-02", type: "server", ip: "10.0.4.18", status: "clean", zone: "SERVERS", x: 440, y: 240, connections: 5, newEdges: 0 },
-        { id: "n8", label: "Workstation-104", type: "host", ip: "10.0.2.14", status: "clean", zone: "INTERNAL", x: 140, y: 260, connections: 3, newEdges: 0 }
-      ],
-      edges: [
-        { source: "n1", target: "n2", status: "OBSERVED", type: "normal", label: "HTTPS/LDAP" },
-        { source: "n1", target: "n3", status: "OBSERVED", type: "normal", label: "DHCP/DNS" },
-        { source: "n3", target: "n2", status: "OBSERVED", type: "suspicious", label: "Suspicious RPC Scan" },
-        { source: "n3", target: "n4", status: "FORECAST", type: "forecast", label: "Projected SMB PsExec" },
-        { source: "n4", target: "n5", status: "FORECAST", type: "forecast", label: "Projected SQL Query" },
-        { source: "n4", target: "n6", status: "FORECAST", type: "forecast", label: "Projected C2 Tunnel" },
-        { source: "n1", target: "n8", status: "OBSERVED", type: "normal", label: "Normal Flow" },
-        { source: "n4", target: "n7", status: "OBSERVED", type: "new", label: "New Internal Flow" }
-      ]
-    },
+    topology: REPLAY_TICKS[2].topology,
     whatIfSimulationData: {
       targetHost: "FIN-SRV-01",
       targetIp: "10.0.4.12",
@@ -459,3 +923,23 @@ export const SYSTEM_STATUS = {
   predictiveHorizon: "90s",
   inferenceLatency: "12ms"
 };
+
+export const EVALUATION_BENCHMARKS = {
+  methodology: {
+    splitType: "Strict Temporal Split (Past -> Future)",
+    trainTestBoundary: "Time-Based Sequential Window (T < T_split)",
+    leakageSafeguard: "Zero Future-Window Feature Leakage",
+    evaluationDataset: "Multi-Stage Network Telemetry Stream Set"
+  },
+  horizonMetrics: [
+    { horizon: "+30s", precision: 0.84, recall: 0.79, f1Score: 0.81, avgLeadTimeSec: 28 },
+    { horizon: "+60s", precision: 0.76, recall: 0.71, f1Score: 0.73, avgLeadTimeSec: 52 },
+    { horizon: "+90s", precision: 0.62, recall: 0.58, f1Score: 0.60, avgLeadTimeSec: 74 }
+  ],
+  operationalSummary: {
+    falseAlarmsPerHour: "0.42 / hr",
+    meanWarningLeadTime: "51.3s",
+    inferenceLatency: "12ms / sample"
+  }
+};
+

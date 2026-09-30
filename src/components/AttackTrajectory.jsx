@@ -9,92 +9,120 @@ export default function AttackTrajectory({ trajectory }) {
   if (!trajectory || trajectory.length === 0) return null;
 
   return (
-    <div className="bg-surface border border-slate-200/90 rounded-xl p-5 shadow-card h-full flex flex-col justify-between">
+    <div className="bg-surface dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 shadow-md h-full flex flex-col justify-between">
       {/* Header & Subtitle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 mb-4 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 gap-2">
         <div>
-          <h2 className="text-xs font-bold text-navy-800 uppercase tracking-wider font-mono">
+          <h2 className="text-sm font-bold text-navy-800 dark:text-slate-100 uppercase tracking-wider font-mono">
             ATTACK TRAJECTORY
           </h2>
-          <p className="text-[11px] font-mono text-slate-400 mt-0.5">
-            Current behaviour → projected future
+          <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-0.5">
+            Observed Past → Current State → Forecast → Actual Event
           </p>
         </div>
 
-        {/* Compact Legend */}
-        <div className="flex items-center gap-3 text-[11px] font-mono">
+        {/* Quiet Legend */}
+        <div className="flex items-center gap-4 text-xs font-mono flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-800" />
-            <span className="text-slate-700 font-semibold">OBSERVED</span>
+            <span className="w-2 h-2 rounded-full bg-slate-700 dark:bg-slate-300" />
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Observed</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full border border-dashed border-forecast bg-forecast-light" />
-            <span className="text-forecast font-bold">FORECAST</span>
+            <span className="w-2 h-2 rounded-full bg-accent ring-2 ring-accent/30" />
+            <span className="text-navy-800 dark:text-slate-100 font-bold">CURRENT (NOW)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full border border-dashed border-forecast bg-forecast-light dark:bg-indigo-950/60" />
+            <span className="text-forecast font-medium">Forecast</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+            <span className="text-emerald-700 dark:text-emerald-400 font-medium">Actual</span>
           </div>
         </div>
       </div>
 
       {/* Horizontal Visual Timeline Container */}
       <div className="overflow-x-auto overflow-y-hidden py-2 scrollbar-thin">
-        <div className="flex items-center gap-2 min-w-[720px] px-1">
+        <div className="flex items-center gap-3 min-w-[760px] px-1">
           {trajectory.map((node, idx) => {
             const isObserved = node.status === "OBSERVED";
             const isForecast = node.status === "FORECAST";
-            const isCurrent = node.isCurrent;
+            const isActual = node.status === "ACTUAL";
+            const isCurrent = node.isCurrent || node.status === "CURRENT";
             const isSelected = selectedNode?.id === node.id;
 
-            // Map time label cleanly
             const timeLabel = isCurrent
               ? "NOW"
+              : isActual
+              ? node.timestamp || `+${(idx - 2) * 30}s`
               : isForecast
-              ? node.estimatedTime?.replace(" horizon", "") || "+30s"
-              : node.timestamp || `T-${(trajectory.length - idx) * 30}s`;
+              ? node.estimatedTime || `+${(idx - 2) * 30}s`
+              : node.timestamp || `T-${(2 - idx) * 45}s`;
 
             return (
               <React.Fragment key={node.id}>
                 {/* Trajectory Node Card */}
                 <div
                   onClick={() => setSelectedNode(isSelected ? null : node)}
-                  className={`flex-1 min-w-[155px] max-w-[200px] cursor-pointer transition-all duration-200 rounded-lg p-3 flex flex-col justify-between h-36 ${
+                  className={`flex-1 min-w-[160px] max-w-[210px] cursor-pointer transition-all duration-200 rounded-lg p-3.5 flex flex-col justify-between h-36 ${
                     isCurrent
-                      ? "bg-blue-50/70 border-2 border-accent shadow-md ring-2 ring-accent/15 scale-[1.02]"
+                      ? "bg-blue-50/90 dark:bg-blue-950/60 border-2 border-accent shadow-md ring-2 ring-accent/20 scale-[1.02]"
+                      : isActual
+                      ? "bg-emerald-50/80 dark:bg-emerald-950/50 border-2 border-emerald-500 shadow-sm"
+                      : isForecast
+                      ? "bg-forecast-light/40 dark:bg-indigo-950/40 border-2 border-dashed border-forecast-border dark:border-indigo-700/60 hover:border-forecast"
                       : isObserved
-                      ? "bg-slate-50 border border-slate-300 hover:border-slate-400"
-                      : "bg-forecast-light/50 border border-dashed border-forecast-border hover:border-forecast"
-                  } ${isSelected ? "ring-2 ring-navy-800" : ""}`}
+                      ? "bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                      : "bg-slate-50/50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 opacity-60"
+                  } ${isSelected ? "ring-2 ring-navy-800 dark:ring-slate-200" : ""}`}
                 >
-                  {/* 1. Small Tactic / Phase Label */}
-                  <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase tracking-wider truncate">
+                  {/* 1. STAGE */}
+                  <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider truncate">
                     {node.stage}
                   </div>
 
-                  {/* 2. Main Behaviour */}
+                  {/* 2. BEHAVIOUR */}
                   <div
-                    className={`text-xs font-bold leading-tight my-1 line-clamp-2 ${
+                    className={`text-xs font-bold leading-snug my-1 line-clamp-2 ${
                       isCurrent
-                        ? "text-navy-800"
+                        ? "text-navy-800 dark:text-slate-100 font-extrabold"
+                        : isActual
+                        ? "text-emerald-950 dark:text-emerald-200 font-extrabold"
                         : isForecast
-                        ? "text-forecast"
-                        : "text-slate-800"
+                        ? "text-forecast font-bold"
+                        : isObserved
+                        ? "text-slate-800 dark:text-slate-200 font-semibold"
+                        : "text-slate-400 font-normal"
                     }`}
                   >
                     {node.techniqueName}
                   </div>
 
-                  {/* 3 & 4. State Badge & Time */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 font-mono text-[10px]">
-                    <StatusBadge
-                      status={node.status}
-                      size="sm"
-                      customLabel={isCurrent ? "CURRENT" : isForecast ? "FORECAST" : "OBSERVED"}
-                    />
+                  {/* 3. STATE & TIME */}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-700/60 font-mono text-[10px]">
+                    <span
+                      className={`font-mono font-bold uppercase text-[9px] px-1.5 py-0.5 rounded ${
+                        isCurrent
+                          ? "bg-accent text-white"
+                          : isActual
+                          ? "bg-emerald-600 text-white"
+                          : isForecast
+                          ? "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      {isCurrent ? "CURRENT" : isActual ? "ACTUAL" : isForecast ? "FORECAST" : "OBSERVED"}
+                    </span>
                     <span
                       className={`font-semibold ${
                         isCurrent
-                          ? "text-navy-800 font-bold"
+                          ? "text-navy-800 dark:text-slate-100 font-bold"
+                          : isActual
+                          ? "text-emerald-700 dark:text-emerald-400 font-bold"
                           : isForecast
-                          ? "text-forecast"
-                          : "text-slate-500"
+                          ? "text-forecast font-semibold"
+                          : "text-slate-400 dark:text-slate-500"
                       }`}
                     >
                       {timeLabel}
@@ -102,13 +130,15 @@ export default function AttackTrajectory({ trajectory }) {
                   </div>
                 </div>
 
-                {/* Connector Arrow (except last item) */}
+                {/* Connector Arrow */}
                 {idx < trajectory.length - 1 && (
-                  <div className="flex items-center justify-center text-slate-300 flex-shrink-0 px-0.5">
-                    {isCurrent || (isObserved && trajectory[idx + 1]?.isCurrent) ? (
+                  <div className="flex items-center justify-center text-slate-300 dark:text-slate-700 flex-shrink-0 px-0.5">
+                    {isCurrent ? (
                       <span className="font-mono text-xs font-bold text-accent">━━━━▶</span>
+                    ) : isActual ? (
+                      <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">━━━━▶</span>
                     ) : isObserved && trajectory[idx + 1]?.status === "OBSERVED" ? (
-                      <span className="font-mono text-xs text-slate-400">────▶</span>
+                      <span className="font-mono text-xs text-slate-300 dark:text-slate-600">────▶</span>
                     ) : (
                       <span className="font-mono text-xs text-forecast">┈ ┈ ┈▶</span>
                     )}
@@ -120,16 +150,18 @@ export default function AttackTrajectory({ trajectory }) {
         </div>
       </div>
 
-      {/* Selected Node Drawer */}
+      {/* Selected Node Details */}
       {selectedNode && (
-        <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs flex items-center justify-between font-mono animate-fadeIn">
+        <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between font-mono animate-fadeIn">
           <div>
-            <span className="font-bold text-navy-800">[{selectedNode.techniqueId}] {selectedNode.stage}:</span>{" "}
-            <span className="text-slate-600">{selectedNode.details}</span>
+            <span className="font-bold text-navy-800 dark:text-slate-100">
+              [{selectedNode.techniqueId}] {selectedNode.stage} ({selectedNode.status}):
+            </span>{" "}
+            <span className="text-slate-600 dark:text-slate-300">{selectedNode.details}</span>
           </div>
           <button
             onClick={() => setSelectedNode(null)}
-            className="text-[10px] text-slate-400 hover:text-navy-800 underline ml-2"
+            className="text-[10px] text-slate-400 dark:text-slate-500 hover:text-navy-800 dark:hover:text-slate-200 underline ml-2 flex-shrink-0"
           >
             Dismiss
           </button>

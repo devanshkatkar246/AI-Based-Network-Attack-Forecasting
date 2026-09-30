@@ -8,11 +8,13 @@ import ForecastProbabilityChart from "@/components/forecast/ForecastProbabilityC
 import NextBehaviourCard from "@/components/forecast/NextBehaviourCard";
 import ForecastEvidenceSection from "@/components/forecast/ForecastEvidenceSection";
 import AttackInterpretationFlow from "@/components/forecast/AttackInterpretationFlow";
+import ForecastResultNarrative from "@/components/ForecastResultNarrative";
+import ModelEvaluationSection from "@/components/ModelEvaluationSection";
 import { SCENARIOS } from "@/data/mockData";
 
 function ForecastDeepDiveContent({ activeScenario, setActiveScenarioId }) {
   const scenario = activeScenario || SCENARIOS[0];
-  const [selectedHorizon, setSelectedHorizon] = useState("60s");
+  const [selectedHorizon, setSelectedHorizon] = useState("30s");
 
   return (
     <div className="space-y-6">
@@ -30,17 +32,23 @@ function ForecastDeepDiveContent({ activeScenario, setActiveScenarioId }) {
         selectedHorizon={selectedHorizon}
       />
 
-      {/* 3. Mid Grid: Forecast Probability & Uncertainty Range (Left) + Next Likely Behaviour & Horizon (Right) */}
+      {/* 3. Mid Grid: Forecast Trajectory Curve (Left) + Next Likely Behaviour & Horizon (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <ForecastProbabilityChart data={scenario.likelihoodOverTime} />
+        <ForecastProbabilityChart
+          data={scenario.likelihoodOverTime}
+          selectedHorizon={selectedHorizon}
+        />
         <NextBehaviourCard
-          nextLikelyBehaviour={scenario.nextLikelyBehaviour}
           horizonData={scenario.horizonData}
-          warningWindow={scenario.warningWindow}
+          selectedHorizon={selectedHorizon}
+          onSelectHorizon={setSelectedHorizon}
         />
       </div>
 
-      {/* 4. WHY THIS FORECAST? — Evidence Section (Feature Signals, Temporal Forensic Timeline, Topology Edge) */}
+      {/* 4. FORECAST SUMMARY / RESULT NARRATIVE */}
+      <ForecastResultNarrative scenario={scenario} />
+
+      {/* 5. WHY THIS FORECAST? — Evidence Section */}
       <ForecastEvidenceSection
         featureSignals={scenario.featureSignals}
         temporalEvidence={scenario.temporalEvidence}
@@ -51,6 +59,9 @@ function ForecastDeepDiveContent({ activeScenario, setActiveScenarioId }) {
       <AttackInterpretationFlow
         attackInterpretation={scenario.attackInterpretation}
       />
+
+      {/* 6. Offline Model Evaluation & Methodology */}
+      <ModelEvaluationSection />
     </div>
   );
 }
@@ -67,3 +78,4 @@ export default function ForecastPage() {
     </AppShell>
   );
 }
+
