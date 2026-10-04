@@ -3,23 +3,24 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext({
-  theme: "light",
+  theme: "dark",
   toggleTheme: () => {},
 });
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Restore saved theme from localStorage on initial mount
     try {
       const savedTheme = localStorage.getItem("sih_theme");
       if (savedTheme === "dark" || savedTheme === "light") {
         setTheme(savedTheme);
+      } else {
+        setTheme("dark");
       }
     } catch (e) {
-      console.warn("Could not read theme from localStorage", e);
+      setTheme("dark");
     }
     setMounted(true);
   }, []);
@@ -35,7 +36,7 @@ export function ThemeProvider({ children }) {
     try {
       localStorage.setItem("sih_theme", theme);
     } catch (e) {
-      console.warn("Could not write theme to localStorage", e);
+      // ignore
     }
   }, [theme, mounted]);
 

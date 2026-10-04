@@ -3,6 +3,7 @@
 import React from "react";
 import { useReplay, REPLAY_STATES } from "@/context/ReplayContext";
 import { REPLAY_TICKS } from "@/data/mockData";
+import { formatRelativeTimestamp } from "@/lib/temporalUtils";
 import { Play, Pause, RotateCcw, Sparkles, SkipForward, SkipBack, CheckCircle2, Info } from "lucide-react";
 
 export default function ReplayControlBar() {
@@ -18,16 +19,20 @@ export default function ReplayControlBar() {
     stepBack,
     jumpToTick,
     isFrozenAtCurrent,
+    totalTicks,
+    CURRENT_FREEZE_INDEX,
   } = useReplay();
+
+  const maxIndex = totalTicks - 1;
 
   const renderPrimaryButton = () => {
     if (replayState === REPLAY_STATES.PLAYING) {
       return (
         <button
           onClick={pause}
-          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-mono font-medium flex items-center gap-1.5 transition-colors"
+          className="px-3 py-1.5 bg-[#1D242D] hover:bg-[#2A323C] text-[#E7EAF0] border border-[#2A323C] rounded text-xs font-mono font-medium flex items-center gap-1.5 transition-colors"
         >
-          <Pause className="w-3.5 h-3.5 fill-white" />
+          <Pause className="w-3.5 h-3.5 text-[#E7EAF0]" />
           <span>PAUSE</span>
         </button>
       );
@@ -37,21 +42,21 @@ export default function ReplayControlBar() {
       return (
         <button
           onClick={revealFuture}
-          className="px-3.5 py-1.5 bg-accent hover:bg-blue-600 text-white rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm"
+          className="px-3.5 py-1.5 bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-subtle"
         >
-          <Sparkles className="w-3.5 h-3.5 text-white" />
+          <Sparkles className="w-3.5 h-3.5 text-[#0D1015]" />
           <span>REVEAL FUTURE EVENT</span>
         </button>
       );
     }
 
-    if (replayState === REPLAY_STATES.VALIDATED || currentTickIndex === REPLAY_TICKS.length - 1) {
+    if (replayState === REPLAY_STATES.VALIDATED || currentTickIndex === maxIndex) {
       return (
         <button
           onClick={reset}
-          className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-mono font-medium flex items-center gap-1.5 transition-colors"
+          className="px-3 py-1.5 bg-[#1D242D] hover:bg-[#2A323C] text-[#E7EAF0] border border-[#2A323C] rounded text-xs font-mono font-medium flex items-center gap-1.5 transition-colors"
         >
-          <RotateCcw className="w-3.5 h-3.5 text-accent" />
+          <RotateCcw className="w-3.5 h-3.5 text-[#6F8FBE]" />
           <span>RESTART REPLAY</span>
         </button>
       );
@@ -60,26 +65,28 @@ export default function ReplayControlBar() {
     return (
       <button
         onClick={play}
-        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-mono font-medium flex items-center gap-1.5 transition-colors"
+        className="px-3 py-1.5 bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] rounded text-xs font-mono font-bold flex items-center gap-1.5 transition-colors"
       >
-        <Play className="w-3.5 h-3.5 fill-white text-white" />
+        <Play className="w-3.5 h-3.5 fill-[#0D1015] text-[#0D1015]" />
         <span>PLAY</span>
       </button>
     );
   };
 
+  const currentLabel = formatRelativeTimestamp(currentTick?.timeLabel, currentTickIndex, CURRENT_FREEZE_INDEX);
+
   return (
-    <div className="space-y-2">
-      {/* Replay Strip */}
-      <div className="bg-surface dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-lg px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-2 font-mono select-none">
+      {/* Replay Control Strip */}
+      <div className="bg-[#151A21] border border-[#2A323C] rounded-lg px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-card">
         {/* Left: Current Replay State */}
-        <div className="flex items-center gap-3 font-mono text-xs">
-          <span className="font-bold text-navy-800 dark:text-slate-100 uppercase tracking-wide">
+        <div className="flex items-center gap-3 text-xs">
+          <span className="font-bold text-[#E7EAF0] uppercase tracking-wide">
             TEMPORAL REPLAY
           </span>
-          <span className="text-slate-300 dark:text-slate-700">|</span>
-          <span className="text-slate-500 dark:text-slate-400">
-            State: <strong className="text-navy-800 dark:text-slate-100">{currentTick.timeLabel}</strong> ({currentTick.phase.replace("_", " ")})
+          <span className="text-[#2A323C]">|</span>
+          <span className="text-[#9BA4B0]">
+            Position: <strong className="text-[#6F8FBE]">{currentLabel}</strong> {currentTick?.phase ? `(${currentTick.phase.replace("_", " ")})` : ""}
           </span>
         </div>
 
@@ -88,7 +95,7 @@ export default function ReplayControlBar() {
           <button
             onClick={stepBack}
             disabled={currentTickIndex === 0}
-            className="p-1 text-slate-400 dark:text-slate-500 hover:text-navy-800 dark:hover:text-slate-200 disabled:opacity-30 transition-colors"
+            className="p-1 text-[#6F7885] hover:text-[#E7EAF0] disabled:opacity-30 transition-colors"
             title="Step Back"
           >
             <SkipBack className="w-3.5 h-3.5" />
@@ -98,8 +105,8 @@ export default function ReplayControlBar() {
 
           <button
             onClick={stepForward}
-            disabled={currentTickIndex === REPLAY_TICKS.length - 1}
-            className="p-1 text-slate-400 dark:text-slate-500 hover:text-navy-800 dark:hover:text-slate-200 disabled:opacity-30 transition-colors"
+            disabled={currentTickIndex === maxIndex}
+            className="p-1 text-[#6F7885] hover:text-[#E7EAF0] disabled:opacity-30 transition-colors"
             title="Step Forward"
           >
             <SkipForward className="w-3.5 h-3.5" />
@@ -107,7 +114,7 @@ export default function ReplayControlBar() {
 
           <button
             onClick={reset}
-            className="p-1 text-slate-400 dark:text-slate-500 hover:text-navy-800 dark:hover:text-slate-200 transition-colors ml-1"
+            className="p-1 text-[#6F7885] hover:text-[#E7EAF0] transition-colors ml-1"
             title="Reset"
           >
             <RotateCcw className="w-3 h-3" />
@@ -115,44 +122,46 @@ export default function ReplayControlBar() {
         </div>
       </div>
 
-      {/* Quiet Progress Stepper */}
+      {/* Dynamic Stepper Bar */}
       <div className="px-1 overflow-x-auto">
-        <div className="flex items-center justify-between min-w-[560px] py-1 font-mono text-[11px]">
-          {REPLAY_TICKS.map((tick, idx) => {
+        <div className="flex items-center justify-between min-w-[560px] py-1 text-[11px]">
+          {Array.from({ length: totalTicks }).map((_, idx) => {
             const isActive = idx === currentTickIndex;
             const isPassed = idx < currentTickIndex;
-            const isFreezeNode = idx === 2;
-            const isActualRevealed = idx >= 3 && idx <= currentTickIndex;
+            const isFreezeNode = idx === CURRENT_FREEZE_INDEX;
+            const isActualRevealed = idx > CURRENT_FREEZE_INDEX && idx <= currentTickIndex;
+            const mockItem = REPLAY_TICKS[idx];
+            const nodeLabel = formatRelativeTimestamp(mockItem?.timeLabel, idx, CURRENT_FREEZE_INDEX);
 
             return (
-              <React.Fragment key={tick.tickIndex}>
+              <React.Fragment key={idx}>
                 <button
                   onClick={() => jumpToTick(idx)}
                   className={`flex items-center gap-1.5 px-2 py-0.5 rounded transition-colors ${
                     isActive
-                      ? "text-navy-800 dark:text-slate-100 font-bold bg-slate-100 dark:bg-slate-800"
+                      ? "text-[#E7EAF0] font-bold bg-[#1D242D] border border-[#6F8FBE]/40"
                       : isPassed
-                      ? "text-slate-600 dark:text-slate-300"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                      ? "text-[#9BA4B0]"
+                      : "text-[#6F7885] hover:text-[#E7EAF0]"
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
                       isFreezeNode && isActive
-                        ? "bg-accent ring-2 ring-accent/30"
+                        ? "bg-[#6F8FBE] ring-2 ring-[#6F8FBE]/40"
                         : isActualRevealed
-                        ? "bg-emerald-600"
+                        ? "bg-[#668B73]"
                         : isActive
-                        ? "bg-navy-800 dark:bg-slate-200"
+                        ? "bg-[#E7EAF0]"
                         : isPassed
-                        ? "bg-slate-400 dark:bg-slate-500"
-                        : "bg-slate-200 dark:bg-slate-700"
+                        ? "bg-[#6F7885]"
+                        : "bg-[#2A323C]"
                     }`}
                   />
-                  <span>{tick.timeLabel}</span>
+                  <span>{nodeLabel}</span>
                 </button>
-                {idx < REPLAY_TICKS.length - 1 && (
-                  <div className="flex-1 h-px mx-1.5 bg-slate-200/80 dark:bg-slate-800" />
+                {idx < maxIndex && (
+                  <div className="flex-1 h-px mx-1.5 bg-[#2A323C]" />
                 )}
               </React.Fragment>
             );
@@ -161,20 +170,20 @@ export default function ReplayControlBar() {
       </div>
 
       {/* Validation Banner Climax */}
-      {currentTick.validationNotice && (
-        <div className="bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800/80 rounded-lg p-3 font-mono text-xs flex items-center justify-between gap-2 animate-fadeIn">
+      {currentTick?.validationNotice && (
+        <div className="bg-[#19241E] border border-[#668B73]/40 rounded-lg p-3 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#668B73] flex-shrink-0" />
             <div>
-              <span className="font-bold text-emerald-950 dark:text-emerald-200 uppercase mr-2">
-                {currentTick.validationNotice.title}
+              <span className="font-bold text-[#E7EAF0] uppercase mr-2">
+                {currentTick.validationNotice.title || "VALIDATED"}
               </span>
-              <span className="text-emerald-800 dark:text-emerald-300 text-[11px]">
-                {currentTick.validationNotice.subtitle}
+              <span className="text-[#9BA4B0] text-[11px]">
+                {currentTick.validationNotice.subtitle || "Replay matches observed temporal ground truth"}
               </span>
             </div>
           </div>
-          <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded uppercase">
+          <span className="text-[10px] font-bold text-[#668B73] bg-[#0D1015] border border-[#668B73]/40 px-2 py-0.5 rounded uppercase">
             FORECAST VALIDATED
           </span>
         </div>
@@ -182,16 +191,16 @@ export default function ReplayControlBar() {
 
       {/* Freeze Banner at CURRENT */}
       {isFrozenAtCurrent && (
-        <div className="bg-blue-50/60 dark:bg-blue-950/40 border border-accent/30 dark:border-accent/40 rounded-lg p-3 font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-fadeIn">
+        <div className="bg-[#151D28] border border-[#6F8FBE]/40 rounded-lg p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-accent flex-shrink-0" />
-            <span className="text-slate-700 dark:text-slate-200">
-              Replay frozen at <strong className="text-navy-800 dark:text-slate-100">NOW (Privilege Access)</strong>. Click <strong className="text-navy-800 dark:text-slate-100">REVEAL FUTURE EVENT</strong> to observe actual outcome.
+            <Info className="w-4 h-4 text-[#6F8FBE] flex-shrink-0" />
+            <span className="text-[#E7EAF0]">
+              Replay paused at <strong className="text-[#6F8FBE]">CURRENT NETWORK STATE (NOW)</strong>. Click <strong className="text-[#6F8FBE]">REVEAL FUTURE EVENT</strong> to step forward into model prediction rollout.
             </span>
           </div>
           <button
             onClick={revealFuture}
-            className="px-3 py-1 bg-accent hover:bg-blue-600 text-white rounded text-xs font-mono font-bold flex-shrink-0 transition-colors"
+            className="px-3 py-1 bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] rounded text-xs font-mono font-bold flex-shrink-0 transition-colors"
           >
             REVEAL FUTURE
           </button>
@@ -200,4 +209,6 @@ export default function ReplayControlBar() {
     </div>
   );
 }
+
+
 

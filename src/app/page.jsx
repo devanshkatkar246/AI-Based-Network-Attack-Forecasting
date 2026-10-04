@@ -2,85 +2,92 @@
 
 import React from "react";
 import Link from "next/link";
-import AppShell from "@/components/AppShell";
-import AttackTrajectory from "@/components/AttackTrajectory";
-import CurrentStateCard from "@/components/CurrentStateCard";
-import ForecastCard from "@/components/ForecastCard";
-import WarningWindowCard from "@/components/WarningWindowCard";
-import ForecastEvidenceSection from "@/components/forecast/ForecastEvidenceSection";
-import AttackInterpretationFlow from "@/components/forecast/AttackInterpretationFlow";
-import ForecastResultNarrative from "@/components/ForecastResultNarrative";
-import TopologyMap from "@/components/TopologyMap";
-import { SCENARIOS } from "@/data/mockData";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Upload, Layers, ShieldCheck, Activity, Terminal } from "lucide-react";
+import Sidebar from "@/components/Sidebar";
+import TopHeader from "@/components/TopHeader";
 
-function CommandCenterContent({ activeScenario }) {
-  const scenario = activeScenario || SCENARIOS[0];
-
+export default function HomePage() {
   return (
-    <div className="space-y-8">
-      {/* 1. VISUAL HERO: Dominant Attack Trajectory Bar */}
-      <div className="w-full">
-        <AttackTrajectory trajectory={scenario.trajectory} />
-      </div>
+    <div className="flex min-h-screen bg-[#0D1015] text-[#E7EAF0] font-sans antialiased">
+      <Sidebar />
 
-      {/* 2. CORE OPERATIONAL TRIAD: Current State (1/3) + Model Forecast (1/3) + Warning Window (1/3) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-        {/* Q1. WHAT IS HAPPENING NOW? */}
-        <CurrentStateCard scenario={scenario} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <TopHeader title="HOME" activeScenarioName={null} activeScenarioId={null} />
 
-        {/* Q2. WHAT DOES THE MODEL FORECAST NEXT? */}
-        <ForecastCard scenario={scenario} />
+        <main className="flex-1 p-8 max-w-[1400px] w-full mx-auto flex flex-col justify-center space-y-12">
+          {/* Main Hero Header */}
+          <div className="space-y-6 max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-[#2A323C] bg-[#151A21] text-xs font-mono text-[#6F8FBE]">
+              <Terminal className="w-3.5 h-3.5" />
+              <span>SIH 26153 · AI-BASED NETWORK ATTACK FORECASTING</span>
+            </div>
 
-        {/* Q3. HOW MUCH WARNING TIME IS AVAILABLE? */}
-        <WarningWindowCard warningWindow={scenario.warningWindow} />
-      </div>
+            <div className="space-y-3">
+              <h1 className="text-4xl md:text-5xl font-mono font-bold tracking-tight text-[#E7EAF0]">
+                Forecast where a network attack is heading.
+              </h1>
+              <p className="text-base font-sans text-[#9BA4B0] leading-relaxed">
+                Transform raw network traffic into temporal network states S_t, future attack trajectories, and calibrated early warning lead times.
+              </p>
+            </div>
 
-      {/* 3. FORECAST SUMMARY / RESULT NARRATIVE */}
-      <ForecastResultNarrative scenario={scenario} />
+            {/* Primary & Secondary CTA Actions */}
+            <div className="pt-4 flex flex-wrap items-center gap-4 font-mono text-xs">
+              <Link
+                href="/scenarios"
+                className="px-5 py-3 rounded bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] font-bold transition-colors flex items-center gap-2"
+              >
+                <span>OPEN SCENARIO LIBRARY</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
 
-      {/* 4. WHY & TOPOLOGY ROW: Evidence Breakdown (1/2) + Network Topology Graph (1/2) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        {/* Q4. WHY IS THAT BEHAVIOUR BEING FORECAST? */}
-        <ForecastEvidenceSection
-          featureSignals={scenario.featureSignals}
-          temporalEvidence={scenario.temporalEvidence}
-          topologyEvidence={scenario.topologyEvidence}
-        />
+              <Link
+                href="/scenarios?upload=true"
+                className="px-5 py-3 rounded bg-[#151A21] hover:bg-[#191F27] border border-[#2A323C] text-[#E7EAF0] font-semibold transition-colors flex items-center gap-2"
+              >
+                <Upload className="w-4 h-4 text-[#9BA4B0]" />
+                <span>UPLOAD NETWORK DATA (CSV)</span>
+              </Link>
+            </div>
+          </div>
 
-        {/* VISUAL COMMUNICATION GRAPH */}
-        <TopologyMap topology={scenario.topology} />
-      </div>
+          {/* Operational Pillars Summary Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-[#2A323C]">
+            <div className="bg-[#151A21] border border-[#2A323C] rounded-lg p-5 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono text-[#6F8FBE]">
+                <span>01 · TEMPORAL RECOVERY</span>
+                <Activity className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-mono font-semibold text-[#E7EAF0]">Temporal Network States S_t</h3>
+              <p className="text-xs text-[#9BA4B0] leading-relaxed">
+                Groups flow telemetry into 10-second temporal windows, extracting traffic volume, diversity, and topology changes.
+              </p>
+            </div>
 
-      {/* 4. MITRE ATT&CK BEHAVIOURAL INTERPRETATION FLOW */}
-      <AttackInterpretationFlow
-        attackInterpretation={scenario.attackInterpretation}
-      />
+            <div className="bg-[#151A21] border border-[#2A323C] rounded-lg p-5 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono text-[#6F8FBE]">
+                <span>02 · TRAJECTORY ROLLOUT</span>
+                <Layers className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-mono font-semibold text-[#E7EAF0]">Temporal World Model</h3>
+              <p className="text-xs text-[#9BA4B0] leading-relaxed">
+                Learns latent state transitions z_t → z_t+K to roll forward predicted attack paths and target hosts.
+              </p>
+            </div>
 
-      {/* 5. DEFENDER INTERVENTION CTA BAR */}
-      <div className="bg-surface dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 font-mono">
-        <div className="text-xs text-slate-600 dark:text-slate-400">
-          <strong className="text-navy-800 dark:text-slate-200 uppercase mr-2">Defender Intervention Evaluator:</strong>
-          <span>Evaluate counterfactual defense actions to truncate projected attack trajectories.</span>
-        </div>
-
-        <Link
-          href="/what-if"
-          className="px-4 py-2 bg-navy-800 hover:bg-navy-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 flex-shrink-0"
-        >
-          <span>Simulate Intervention</span>
-          <ArrowRight className="w-3.5 h-3.5 text-accent" />
-        </Link>
+            <div className="bg-[#151A21] border border-[#2A323C] rounded-lg p-5 space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono text-[#6F8FBE]">
+                <span>03 · INTERVENTION</span>
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm font-mono font-semibold text-[#E7EAF0]">Counterfactual What-If</h3>
+              <p className="text-xs text-[#9BA4B0] leading-relaxed">
+                Simulates host isolation and credential revocation to compare baseline vs intervention trajectory divergence.
+              </p>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
 }
-
-export default function CommandCenterPage() {
-  return (
-    <AppShell title="Command Center">
-      {({ activeScenario }) => <CommandCenterContent activeScenario={activeScenario} />}
-    </AppShell>
-  );
-}
-

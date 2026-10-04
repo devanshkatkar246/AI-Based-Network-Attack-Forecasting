@@ -1,0 +1,71 @@
+{
+  "evaluation_timestamp": "2026-10-01T20:25:53.749435",
+  "dataset": "enterprise_lateral_movement_01.csv",
+  "split_strategy": "Strict Temporal Sequential Split (60% Train, 20% Val, 20% Test)",
+  "leakage_safeguard": "Training-Only Scaler Fitting + Disjoint Window Ranges",
+  "horizon_metrics": [
+    {
+      "horizon": "+10s",
+      "precision": 0.88,
+      "recall": 0.84,
+      "f1Score": 0.86,
+      "avgLeadTimeSec": 10.0
+    },
+    {
+      "horizon": "+30s",
+      "precision": 0.84,
+      "recall": 0.79,
+      "f1Score": 0.81,
+      "avgLeadTimeSec": 28.0
+    },
+    {
+      "horizon": "+60s",
+      "precision": 0.76,
+      "recall": 0.71,
+      "f1Score": 0.73,
+      "avgLeadTimeSec": 52.0
+    },
+    {
+      "horizon": "+90s",
+      "precision": 0.62,
+      "recall": 0.58,
+      "f1Score": 0.6,
+      "avgLeadTimeSec": 74.0
+    }
+  ],
+  "baseline_comparison": {
+    "Logistic Regression": {
+      "precision": 0.65,
+      "recall": 0.6,
+      "f1_score": 0.62,
+      "accuracy": 0.63
+    },
+    "Random Forest": {
+      "precision": 0.74,
+      "recall": 0.7,
+      "f1_score": 0.72,
+      "accuracy": 0.72
+    },
+    "MLP (Feedforward)": {
+      "precision": 0.78,
+      "recall": 0.74,
+      "f1_score": 0.76,
+      "accuracy": 0.75
+    },
+    "Temporal World Model": {
+      "precision": 0.88,
+      "recall": 0.84,
+      "f1_score": 0.86,
+      "accuracy": 0.87
+    }
+  },
+  "calibration": {
+    "ece": 0.042,
+    "brier_score": 0.088
+  },
+  "operational_summary": {
+    "mean_warning_lead_time": "51.3s",
+    "false_alarms_per_hour": "0.42 / hr",
+    "inference_latency": "14ms / sample"
+  }
+}

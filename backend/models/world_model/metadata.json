@@ -1,0 +1,8 @@
+{
+  "model_name": "TemporalWorldModel",
+  "version": "v2.0.0-phase2",
+  "training_dataset": "enterprise_lateral_movement_01.csv",
+  "context_length": 3,
+  "forecast_horizon": 2,
+  "offline_executable": true
+}

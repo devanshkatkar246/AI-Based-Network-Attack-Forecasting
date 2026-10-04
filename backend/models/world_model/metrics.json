@@ -1,0 +1,6 @@
+{
+  "best_train_loss": 0.09820672869682312,
+  "test_ece": 0.0,
+  "test_brier_score": NaN,
+  "evaluation_timestamp": "2026-10-01T20:22:08.008492"
+}

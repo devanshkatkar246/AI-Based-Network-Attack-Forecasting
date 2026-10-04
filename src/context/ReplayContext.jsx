@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { REPLAY_TICKS } from "@/data/mockData";
+import { fetchScenarioReplay } from "@/lib/api";
 
 const ReplayContext = createContext(null);
 
@@ -13,15 +14,39 @@ export const REPLAY_STATES = {
   VALIDATED: "validated",   // Replay finished / all actual events revealed
 };
 
-export function ReplayProvider({ children }) {
+export function ReplayProvider({ children, initialScenarioId = "enterprise-lateral-movement-01" }) {
+  const [activeScenarioId, setActiveScenarioId] = useState(initialScenarioId);
   const [currentTickIndex, setCurrentTickIndex] = useState(0);
   const [replayState, setReplayState] = useState(REPLAY_STATES.IDLE);
   const [playbackSpeed, setPlaybackSpeed] = useState(1800); // ms per step
+  const [backendState, setBackendState] = useState(null);
 
-  const CURRENT_FREEZE_INDEX = 2; // Tick index 2 corresponds to CURRENT (NOW)
-  const MAX_TICK_INDEX = REPLAY_TICKS.length - 1;
+  // When active scenario changes, reset tick index and state
+  const setScenarioId = useCallback((newId) => {
+    if (newId && newId !== activeScenarioId) {
+      setActiveScenarioId(newId);
+      setCurrentTickIndex(0);
+      setReplayState(REPLAY_STATES.IDLE);
+    }
+  }, [activeScenarioId]);
 
-  const currentTick = REPLAY_TICKS[currentTickIndex] || REPLAY_TICKS[0];
+  // Total ticks and current freeze index derived dynamically
+  const totalTicks = backendState?.totalTicks || REPLAY_TICKS.length;
+  const CURRENT_FREEZE_INDEX = Math.min(2, Math.max(0, totalTicks - 1));
+  const MAX_TICK_INDEX = totalTicks - 1;
+
+  const currentTick = backendState?.current_state || REPLAY_TICKS[currentTickIndex] || REPLAY_TICKS[0];
+
+  useEffect(() => {
+    if (!activeScenarioId) return;
+    let isMounted = true;
+    fetchScenarioReplay(activeScenarioId, currentTickIndex).then((res) => {
+      if (isMounted && res) {
+        setBackendState(res);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [activeScenarioId, currentTickIndex]);
 
   const timerRef = useRef(null);
 
@@ -34,7 +59,6 @@ export function ReplayProvider({ children }) {
 
   const play = useCallback(() => {
     if (replayState === REPLAY_STATES.AT_CURRENT) {
-      // Must use revealFuture to proceed past CURRENT freeze
       return;
     }
     setReplayState(REPLAY_STATES.PLAYING);
@@ -52,7 +76,6 @@ export function ReplayProvider({ children }) {
   }, []);
 
   const revealFuture = useCallback(() => {
-    // Step forward past CURRENT state and continue playing/revealing
     if (currentTickIndex < MAX_TICK_INDEX) {
       const nextIdx = currentTickIndex + 1;
       setCurrentTickIndex(nextIdx);
@@ -72,7 +95,7 @@ export function ReplayProvider({ children }) {
         setReplayState(REPLAY_STATES.PAUSED);
       }
     }
-  }, [currentTickIndex, MAX_TICK_INDEX]);
+  }, [currentTickIndex, MAX_TICK_INDEX, CURRENT_FREEZE_INDEX]);
 
   const stepBack = useCallback(() => {
     if (currentTickIndex > 0) {
@@ -93,7 +116,7 @@ export function ReplayProvider({ children }) {
         setReplayState(REPLAY_STATES.PAUSED);
       }
     }
-  }, [MAX_TICK_INDEX]);
+  }, [MAX_TICK_INDEX, CURRENT_FREEZE_INDEX]);
 
   // Main playback interval loop
   useEffect(() => {
@@ -102,13 +125,11 @@ export function ReplayProvider({ children }) {
       timerRef.current = setInterval(() => {
         setCurrentTickIndex((prev) => {
           const next = prev + 1;
-          // Check if we hit the CURRENT freeze point
           if (next === CURRENT_FREEZE_INDEX) {
             clearTimer();
             setReplayState(REPLAY_STATES.AT_CURRENT);
             return next;
           }
-          // Check if we hit the end
           if (next >= MAX_TICK_INDEX) {
             clearTimer();
             setReplayState(REPLAY_STATES.VALIDATED);
@@ -122,15 +143,18 @@ export function ReplayProvider({ children }) {
     }
 
     return () => clearTimer();
-  }, [replayState, playbackSpeed, MAX_TICK_INDEX]);
+  }, [replayState, playbackSpeed, MAX_TICK_INDEX, CURRENT_FREEZE_INDEX]);
 
   const value = {
+    activeScenarioId,
+    setScenarioId,
     currentTickIndex,
     currentTick,
+    backendState,
     replayState,
     playbackSpeed,
     setPlaybackSpeed,
-    isFrozenAtCurrent: replayState === REPLAY_STATES.AT_CURRENT || (currentTickIndex === CURRENT_FREEZE_INDEX && replayState !== REPLAY_STATES.PLAYING && currentTickIndex < 3),
+    isFrozenAtCurrent: replayState === REPLAY_STATES.AT_CURRENT || (currentTickIndex === CURRENT_FREEZE_INDEX && replayState !== REPLAY_STATES.PLAYING && currentTickIndex < MAX_TICK_INDEX),
     isCompleted: replayState === REPLAY_STATES.VALIDATED || currentTickIndex === MAX_TICK_INDEX,
     play,
     pause,
@@ -139,7 +163,7 @@ export function ReplayProvider({ children }) {
     stepForward,
     stepBack,
     jumpToTick,
-    totalTicks: REPLAY_TICKS.length,
+    totalTicks,
     CURRENT_FREEZE_INDEX,
   };
 
@@ -153,3 +177,4 @@ export function useReplay() {
   }
   return context;
 }
+

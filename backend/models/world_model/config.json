@@ -1,0 +1,7 @@
+{
+  "context_length": 3,
+  "forecast_horizon": 2,
+  "input_dim": 12,
+  "latent_dim": 32,
+  "num_classes": 5
+}

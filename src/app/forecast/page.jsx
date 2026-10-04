@@ -66,15 +66,36 @@ function ForecastDeepDiveContent({ activeScenario, setActiveScenarioId }) {
   );
 }
 
+import Link from "next/link";
+import EmptyState from "@/components/EmptyState";
+
 export default function ForecastPage() {
   return (
-    <AppShell title="Attack Forecast Deep-Dive">
-      {({ activeScenario, setActiveScenarioId }) => (
-        <ForecastDeepDiveContent
-          activeScenario={activeScenario}
-          setActiveScenarioId={setActiveScenarioId}
-        />
-      )}
+    <AppShell title="ATTACK FORECAST DEEP-DIVE">
+      {({ activeScenario, activeScenarioId, setActiveScenarioId }) => {
+        if (!activeScenarioId) {
+          return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center">
+              <EmptyState
+                title="NO SCENARIO LOADED"
+                message="Select or upload a network attack scenario to view multi-horizon forecast trajectory rollouts."
+              />
+              <Link
+                href="/scenarios"
+                className="px-5 py-2.5 rounded bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] font-mono text-xs font-bold transition-colors inline-flex items-center gap-2"
+              >
+                <span>OPEN SCENARIO LIBRARY</span>
+              </Link>
+            </div>
+          );
+        }
+        return (
+          <ForecastDeepDiveContent
+            activeScenario={activeScenario}
+            setActiveScenarioId={setActiveScenarioId}
+          />
+        );
+      }}
     </AppShell>
   );
 }

@@ -2,145 +2,161 @@
 
 import React, { useState } from "react";
 import StatusBadge from "./StatusBadge";
+import { useReplay } from "@/context/ReplayContext";
+import { formatRelativeTimestamp } from "@/lib/temporalUtils";
 
 export default function AttackTrajectory({ trajectory }) {
   const [selectedNode, setSelectedNode] = useState(null);
 
+  const { currentTickIndex, CURRENT_FREEZE_INDEX } = useReplay();
+
   if (!trajectory || trajectory.length === 0) return null;
 
   return (
-    <div className="bg-surface dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-6 shadow-md h-full flex flex-col justify-between">
+    <div className="bg-[#151A21] border border-[#2A323C] rounded-xl p-5 shadow-card flex flex-col justify-between select-none">
       {/* Header & Subtitle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-6 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#2A323C] mb-5 gap-2 font-mono">
         <div>
-          <h2 className="text-sm font-bold text-navy-800 dark:text-slate-100 uppercase tracking-wider font-mono">
+          <h2 className="text-xs font-bold text-[#E7EAF0] uppercase tracking-wider">
             ATTACK TRAJECTORY
           </h2>
-          <p className="text-xs font-mono text-slate-400 dark:text-slate-500 mt-0.5">
-            Observed Past → Current State → Forecast → Actual Event
+          <p className="text-[11px] text-[#9BA4B0] mt-0.5">
+            Observed Past → Current State → Model Forecast → Actual Outcome
           </p>
         </div>
 
-        {/* Quiet Legend */}
-        <div className="flex items-center gap-4 text-xs font-mono flex-wrap">
+        {/* Epistemic State Legend */}
+        <div className="flex items-center gap-4 text-[11px] font-mono flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-slate-700 dark:bg-slate-300" />
-            <span className="text-slate-600 dark:text-slate-300 font-medium">Observed</span>
+            <span className="w-2 h-2 rounded-full bg-[#6F7885]" />
+            <span className="text-[#9BA4B0]">OBSERVED</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-accent ring-2 ring-accent/30" />
-            <span className="text-navy-800 dark:text-slate-100 font-bold">CURRENT (NOW)</span>
+            <span className="w-2 h-2 rounded-full bg-[#6F8FBE]" />
+            <span className="text-[#6F8FBE] font-bold">CURRENT (NOW)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full border border-dashed border-forecast bg-forecast-light dark:bg-indigo-950/60" />
-            <span className="text-forecast font-medium">Forecast</span>
+            <span className="w-2 h-2 rounded-full border border-[#718CB8] bg-transparent" />
+            <span className="text-[#718CB8]">FORECAST</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-600" />
-            <span className="text-emerald-700 dark:text-emerald-400 font-medium">Actual</span>
+            <span className="w-2 h-2 rounded-full bg-[#668B73]" />
+            <span className="text-[#668B73] font-bold">ACTUAL</span>
           </div>
         </div>
       </div>
 
-      {/* Horizontal Visual Timeline Container */}
-      <div className="overflow-x-auto overflow-y-hidden py-2 scrollbar-thin">
-        <div className="flex items-center gap-3 min-w-[760px] px-1">
+      {/* Horizontal Continuous Visual Trajectory Container */}
+      <div className="overflow-x-auto overflow-y-hidden py-1 scrollbar-thin">
+        <div className="flex items-center gap-2.5 min-w-[760px] px-0.5">
           {trajectory.map((node, idx) => {
-            const isObserved = node.status === "OBSERVED";
-            const isForecast = node.status === "FORECAST";
-            const isActual = node.status === "ACTUAL";
-            const isCurrent = node.isCurrent || node.status === "CURRENT";
+            // Determine epistemic state dynamically based on current replay index & node status
+            let isCurrent = node.isCurrent || node.status === "CURRENT" || (idx === CURRENT_FREEZE_INDEX && currentTickIndex === CURRENT_FREEZE_INDEX);
+            let isObserved = node.status === "OBSERVED" || (idx < CURRENT_FREEZE_INDEX && currentTickIndex >= idx);
+            let isActual = node.status === "ACTUAL" || (idx > CURRENT_FREEZE_INDEX && idx <= currentTickIndex);
+            let isForecast = !isCurrent && !isActual && (node.status === "FORECAST" || node.semanticState === "forecast" || idx > currentTickIndex);
+
+            // Replay tick rule (Section 13): At T-90s (tick 0), future steps relative to T-90s are NOT shown as OBSERVED
+            if (currentTickIndex < idx) {
+              isObserved = false;
+              if (idx === currentTickIndex) {
+                isCurrent = true;
+              } else {
+                isCurrent = false;
+                isForecast = true;
+              }
+            } else if (currentTickIndex === idx) {
+              isCurrent = true;
+              isObserved = false;
+              isForecast = false;
+              isActual = false;
+            } else if (currentTickIndex > idx) {
+              if (idx <= CURRENT_FREEZE_INDEX) {
+                isObserved = true;
+                isCurrent = false;
+              } else {
+                isActual = true;
+                isForecast = false;
+                isCurrent = false;
+              }
+            }
+
             const isSelected = selectedNode?.id === node.id;
 
-            const timeLabel = isCurrent
+            // Compute clean temporal time label without T-- bugs
+            const rawTime = node.estimatedTime || node.timestamp;
+            const cleanTimeLabel = isCurrent
               ? "NOW"
-              : isActual
-              ? node.timestamp || `+${(idx - 2) * 30}s`
-              : isForecast
-              ? node.estimatedTime || `+${(idx - 2) * 30}s`
-              : node.timestamp || `T-${(2 - idx) * 45}s`;
+              : formatRelativeTimestamp(rawTime, idx, CURRENT_FREEZE_INDEX);
 
             return (
-              <React.Fragment key={node.id}>
+              <React.Fragment key={node.id || idx}>
                 {/* Trajectory Node Card */}
                 <div
                   onClick={() => setSelectedNode(isSelected ? null : node)}
-                  className={`flex-1 min-w-[160px] max-w-[210px] cursor-pointer transition-all duration-200 rounded-lg p-3.5 flex flex-col justify-between h-36 ${
+                  className={`flex-1 min-w-[155px] max-w-[210px] cursor-pointer transition-all duration-200 rounded-lg p-3.5 flex flex-col justify-between h-34 ${
                     isCurrent
-                      ? "bg-blue-50/90 dark:bg-blue-950/60 border-2 border-accent shadow-md ring-2 ring-accent/20 scale-[1.02]"
+                      ? "bg-[#1D242D] border-2 border-[#6F8FBE] shadow-md"
                       : isActual
-                      ? "bg-emerald-50/80 dark:bg-emerald-950/50 border-2 border-emerald-500 shadow-sm"
+                      ? "bg-[#19241E] border-2 border-[#668B73] shadow-sm"
                       : isForecast
-                      ? "bg-forecast-light/40 dark:bg-indigo-950/40 border-2 border-dashed border-forecast-border dark:border-indigo-700/60 hover:border-forecast"
-                      : isObserved
-                      ? "bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
-                      : "bg-slate-50/50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 text-slate-400 opacity-60"
-                  } ${isSelected ? "ring-2 ring-navy-800 dark:ring-slate-200" : ""}`}
+                      ? "bg-[#151A21] border-2 border-dashed border-[#718CB8]/60 hover:border-[#6F8FBE]"
+                      : "bg-[#191F27] border border-[#2A323C] hover:border-[#6F8FBE]/40"
+                  } ${isSelected ? "ring-2 ring-[#6F8FBE]" : ""}`}
                 >
-                  {/* 1. STAGE */}
-                  <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider truncate">
+                  {/* 1. Stage */}
+                  <div className="text-[9px] font-mono text-[#6F7885] font-bold uppercase tracking-wider truncate">
                     {node.stage}
                   </div>
 
-                  {/* 2. BEHAVIOUR */}
+                  {/* 2. Technique / Behaviour Title */}
                   <div
-                    className={`text-xs font-bold leading-snug my-1 line-clamp-2 ${
+                    className={`text-xs font-mono font-bold leading-snug my-1 line-clamp-2 ${
                       isCurrent
-                        ? "text-navy-800 dark:text-slate-100 font-extrabold"
+                        ? "text-[#6F8FBE]"
                         : isActual
-                        ? "text-emerald-950 dark:text-emerald-200 font-extrabold"
+                        ? "text-[#668B73]"
                         : isForecast
-                        ? "text-forecast font-bold"
-                        : isObserved
-                        ? "text-slate-800 dark:text-slate-200 font-semibold"
-                        : "text-slate-400 font-normal"
+                        ? "text-[#718CB8]"
+                        : "text-[#E7EAF0]"
                     }`}
                   >
                     {node.techniqueName}
                   </div>
 
-                  {/* 3. STATE & TIME */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-700/60 font-mono text-[10px]">
+                  {/* 3. State Badge & Clean Temporal Time */}
+                  <div className="flex items-center justify-between pt-2 border-t border-[#2A323C] font-mono text-[10px]">
+                    <StatusBadge
+                      status={isCurrent ? "CURRENT" : isActual ? "ACTUAL" : isForecast ? "FORECAST" : "OBSERVED"}
+                      size="sm"
+                    />
                     <span
-                      className={`font-mono font-bold uppercase text-[9px] px-1.5 py-0.5 rounded ${
+                      className={`font-bold ${
                         isCurrent
-                          ? "bg-accent text-white"
+                          ? "text-[#6F8FBE]"
                           : isActual
-                          ? "bg-emerald-600 text-white"
+                          ? "text-[#668B73]"
                           : isForecast
-                          ? "bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                          ? "text-[#718CB8]"
+                          : "text-[#9BA4B0]"
                       }`}
                     >
-                      {isCurrent ? "CURRENT" : isActual ? "ACTUAL" : isForecast ? "FORECAST" : "OBSERVED"}
-                    </span>
-                    <span
-                      className={`font-semibold ${
-                        isCurrent
-                          ? "text-navy-800 dark:text-slate-100 font-bold"
-                          : isActual
-                          ? "text-emerald-700 dark:text-emerald-400 font-bold"
-                          : isForecast
-                          ? "text-forecast font-semibold"
-                          : "text-slate-400 dark:text-slate-500"
-                      }`}
-                    >
-                      {timeLabel}
+                      {cleanTimeLabel}
                     </span>
                   </div>
                 </div>
 
-                {/* Connector Arrow */}
+                {/* Continuous Visual Trajectory Connector Arrow */}
                 {idx < trajectory.length - 1 && (
-                  <div className="flex items-center justify-center text-slate-300 dark:text-slate-700 flex-shrink-0 px-0.5">
+                  <div className="flex items-center justify-center text-[#6F7885] flex-shrink-0 px-0.5 select-none">
                     {isCurrent ? (
-                      <span className="font-mono text-xs font-bold text-accent">━━━━▶</span>
+                      <span className="font-mono text-xs font-bold text-[#6F8FBE]">━━━━▶</span>
                     ) : isActual ? (
-                      <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">━━━━▶</span>
-                    ) : isObserved && trajectory[idx + 1]?.status === "OBSERVED" ? (
-                      <span className="font-mono text-xs text-slate-300 dark:text-slate-600">────▶</span>
+                      <span className="font-mono text-xs font-bold text-[#668B73]">━━━━▶</span>
+                    ) : isObserved ? (
+                      <span className="font-mono text-xs text-[#2A323C]">────▶</span>
                     ) : (
-                      <span className="font-mono text-xs text-forecast">┈ ┈ ┈▶</span>
+                      <span className="font-mono text-xs text-[#718CB8]">┈ ┈ ┈▶</span>
                     )}
                   </div>
                 )}
@@ -150,18 +166,23 @@ export default function AttackTrajectory({ trajectory }) {
         </div>
       </div>
 
-      {/* Selected Node Details */}
+      {/* Selected Node Details Drawer */}
       {selectedNode && (
-        <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between font-mono animate-fadeIn">
+        <div className="mt-4 p-3 bg-[#191F27] rounded-lg border border-[#2A323C] text-xs font-mono flex items-center justify-between">
           <div>
-            <span className="font-bold text-navy-800 dark:text-slate-100">
-              [{selectedNode.techniqueId}] {selectedNode.stage} ({selectedNode.status}):
+            <span className="font-bold text-[#E7EAF0]">
+              [{selectedNode.techniqueId || "T1000"}] {selectedNode.stage}:
             </span>{" "}
-            <span className="text-slate-600 dark:text-slate-300">{selectedNode.details}</span>
+            <span className="text-[#9BA4B0]">{selectedNode.details}</span>
+            {selectedNode.targetHost && (
+              <span className="text-[#6F7885] text-[10px] ml-2">
+                Target: {selectedNode.targetHost}
+              </span>
+            )}
           </div>
           <button
             onClick={() => setSelectedNode(null)}
-            className="text-[10px] text-slate-400 dark:text-slate-500 hover:text-navy-800 dark:hover:text-slate-200 underline ml-2 flex-shrink-0"
+            className="text-[10px] text-[#9BA4B0] hover:text-[#E7EAF0] underline ml-2 flex-shrink-0"
           >
             Dismiss
           </button>
@@ -170,3 +191,5 @@ export default function AttackTrajectory({ trajectory }) {
     </div>
   );
 }
+
+

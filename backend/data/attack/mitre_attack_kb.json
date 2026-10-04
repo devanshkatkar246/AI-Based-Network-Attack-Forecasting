@@ -1,0 +1,76 @@
+{
+  "techniques": {
+    "T1046": {
+      "technique_id": "T1046",
+      "technique_name": "Network Service Discovery",
+      "tactic": "Reconnaissance",
+      "tactic_id": "TA0043",
+      "description": "Adversaries may attempt to get a listing of services running on remote hosts to identify vulnerable targets.",
+      "observed_indicators": ["Port scan burst", "SYN sweep across subnet", "High destination port count"]
+    },
+    "T1087.002": {
+      "technique_id": "T1087.002",
+      "technique_name": "Domain Account Discovery",
+      "tactic": "Discovery",
+      "tactic_id": "TA0007",
+      "description": "Adversaries may attempt to get a listing of domain accounts to identify targets for privilege escalation.",
+      "observed_indicators": ["LDAP query volume spike", "RPC domain enumeration", "DC connection surge"]
+    },
+    "T1003.001": {
+      "technique_id": "T1003.001",
+      "technique_name": "LSASS Memory Dump",
+      "tactic": "Credential Access",
+      "tactic_id": "TA0006",
+      "description": "Adversaries may attempt to access credentials stored in the process memory of LSASS.",
+      "observed_indicators": ["Process memory access to lsass.exe", "NTLM hash extraction patterns"]
+    },
+    "T1021.002": {
+      "technique_id": "T1021.002",
+      "technique_name": "SMB/PsExec Lateral Movement",
+      "tactic": "Lateral Movement",
+      "tactic_id": "TA0008",
+      "description": "Adversaries may use SMB or PsExec to move laterally between systems on a network.",
+      "observed_indicators": ["New east-west SMB connection", "Port 445 cross-zone traffic", "Admin share access (IPC$, C$)"]
+    },
+    "T1071.001": {
+      "technique_id": "T1071.001",
+      "technique_name": "Encrypted C2 Channel",
+      "tactic": "Command & Control",
+      "tactic_id": "TA0011",
+      "description": "Adversaries may communicate using encrypted web protocols to disguise C2 traffic.",
+      "observed_indicators": ["Persistent outbound TLS session to unrated IP", "Beaconing interval pattern"]
+    },
+    "T1059.001": {
+      "technique_id": "T1059.001",
+      "technique_name": "PowerShell Command Execution",
+      "tactic": "Execution",
+      "tactic_id": "TA0002",
+      "description": "Adversaries may abuse PowerShell to execute encoded commands and scripts.",
+      "observed_indicators": ["Encoded command line arguments", "Remote script download via HTTP"]
+    },
+    "T1526": {
+      "technique_id": "T1526",
+      "technique_name": "Cloud Service Discovery",
+      "tactic": "Discovery",
+      "tactic_id": "TA0007",
+      "description": "Adversaries may enumerate cloud services and resources to discover sensitive data stores.",
+      "observed_indicators": ["High rate of s3:ListBucket / GetObject API calls", "STS token usage from unexpected IP"]
+    }
+  },
+  "tactic_order": [
+    "Reconnaissance",
+    "Resource Development",
+    "Initial Access",
+    "Execution",
+    "Persistence",
+    "Privilege Escalation",
+    "Defense Evasion",
+    "Credential Access",
+    "Discovery",
+    "Lateral Movement",
+    "Collection",
+    "Command & Control",
+    "Exfiltration",
+    "Impact"
+  ]
+}

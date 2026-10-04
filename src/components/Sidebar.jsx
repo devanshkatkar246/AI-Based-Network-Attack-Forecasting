@@ -4,49 +4,45 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  Radar, 
+  Home,
   Layers, 
+  Radar, 
   Network, 
   TrendingUp, 
   GitFork, 
-  FileText,
-  Shield
+  FileText
 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Command Center", icon: Radar },
-  { href: "/scenarios", label: "Scenarios", icon: Layers },
-  { href: "/network", label: "Network State", icon: Network },
-  { href: "/forecast", label: "Forecast", icon: TrendingUp },
-  { href: "/what-if", label: "What-If", icon: GitFork },
-  { href: "/reports", label: "Threat Report", icon: FileText },
+  { href: "/", label: "HOME", icon: Home },
+  { href: "/scenarios", label: "SCENARIOS", icon: Layers },
+  { href: "/command-center", label: "COMMAND CENTER", icon: Radar },
+  { href: "/network", label: "NETWORK STATE", icon: Network },
+  { href: "/forecast", label: "FORECAST", icon: TrendingUp },
+  { href: "/what-if", label: "WHAT-IF", icon: GitFork },
+  { href: "/reports", label: "THREAT REPORT", icon: FileText },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 bg-surface dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 flex flex-col h-screen sticky top-0 z-30 select-none">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded bg-navy-800 dark:bg-slate-800 text-white flex items-center justify-center border border-transparent dark:border-slate-700">
-          <Shield className="w-4 h-4 text-accent" />
+    <aside className="w-60 bg-[#11151B] border-r border-[#2A323C] flex flex-col h-screen sticky top-0 z-30 select-none">
+      {/* Brand Header - Typographic Identity */}
+      <div className="p-4 border-b border-[#2A323C]">
+        <div className="text-[12px] font-mono font-bold tracking-widest text-[#E7EAF0] uppercase">
+          TECH πRATES
         </div>
-        <div>
-          <div className="text-[9px] font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 font-bold">
-            TEMPORAL
-          </div>
-          <div className="text-xs font-bold tracking-tight text-navy-800 dark:text-slate-100 leading-tight">
-            WORLD MODEL
-          </div>
+        <div className="text-[10px] font-mono text-[#9BA4B0] tracking-tight leading-tight mt-1">
+          TEMPORAL NETWORK INTELLIGENCE
         </div>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-        <div className="px-3 py-1.5 text-[9px] font-mono font-semibold uppercase text-slate-400 dark:text-slate-500 tracking-wider">
-          Console
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <div className="px-3 py-1.5 text-[9px] font-mono font-bold uppercase text-[#6F7885] tracking-widest">
+          NAVIGATION
         </div>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -56,25 +52,24 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition-colors ${
+              className={`flex items-center gap-2.5 px-3 py-2 rounded text-xs font-mono font-semibold transition-colors ${
                 isActive
-                  ? "bg-slate-100 dark:bg-slate-800 text-navy-800 dark:text-slate-100 font-semibold border-l-2 border-accent"
-                  : "text-slate-500 dark:text-slate-400 hover:text-navy-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                  ? "bg-[#1D242D] text-[#6F8FBE] border-l-2 border-[#6F8FBE]"
+                  : "text-[#9BA4B0] hover:text-[#E7EAF0] hover:bg-[#191F27]"
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? "text-accent" : "text-slate-400 dark:text-slate-500"}`} />
-              <span>{item.label}</span>
+              <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#6F8FBE]" : "text-[#6F7885]"}`} />
+              <span className="tracking-wide">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* Bottom Status */}
-      <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 font-mono text-[10px] text-slate-400 dark:text-slate-500 flex items-center justify-between">
-        <span>SIH 26153 MVP</span>
-        <StatusBadge status="OFFLINE" size="sm" />
+      <div className="p-3.5 border-t border-[#2A323C] font-mono text-[10px] text-[#9BA4B0] flex items-center justify-between">
+        <span>SIH 26153</span>
+        <StatusBadge status="ONLINE" size="sm" />
       </div>
     </aside>
   );
 }
-
