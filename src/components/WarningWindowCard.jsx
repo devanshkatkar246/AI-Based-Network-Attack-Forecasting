@@ -41,7 +41,7 @@ export default function WarningWindowCard({ warningWindow }) {
         </div>
 
         <div className="pt-3 border-t border-[#2A323C] text-[10px] font-mono text-[#6F7885]">
-          Target asset: FIN-SRV-01 (10.0.4.12)
+          Target asset: {warningWindow?.targetAsset || "Monitored Subnet"}
         </div>
       </div>
     );

@@ -168,9 +168,13 @@ function ScenariosContent({ setActiveScenarioId }) {
               <div className="flex items-center justify-between font-bold text-[#668B73]">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>DATASET VALIDATED & READY FOR ANALYSIS</span>
+                  <span>DATASET READY</span>
                 </div>
-                <span className="text-[10px] uppercase border border-[#668B73]/40 px-2 py-0.5 rounded">STATUS: READY</span>
+                <span className="text-[10px] uppercase border border-[#668B73]/40 px-2 py-0.5 rounded">SCHEMA: VALIDATED</span>
+              </div>
+
+              <div className="font-bold text-sm text-[#E7EAF0]">
+                {validationReport.scenario_name || validationReport.name}
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px] bg-[#0D1015] p-3 rounded border border-[#2A323C]">
@@ -179,8 +183,8 @@ function ScenariosContent({ setActiveScenarioId }) {
                   <span className="font-semibold text-[#6F8FBE]">{validationReport.scenario_id}</span>
                 </div>
                 <div>
-                  <span className="text-[#6F7885] block">TOTAL FLOW ROWS</span>
-                  <span className="font-semibold">{validationReport.quality_report?.total_rows || 0}</span>
+                  <span className="text-[#6F7885] block">TOTAL ROWS</span>
+                  <span className="font-semibold">{validationReport.rows || validationReport.quality_report?.total_rows || 0}</span>
                 </div>
                 <div>
                   <span className="text-[#6F7885] block">TEMPORAL WINDOWS</span>
@@ -189,7 +193,9 @@ function ScenariosContent({ setActiveScenarioId }) {
                 <div>
                   <span className="text-[#6F7885] block">TIME RANGE</span>
                   <span className="font-semibold text-[10px]">
-                    {validationReport.quality_report?.time_start ? `${validationReport.quality_report.time_start.slice(11, 19)} → ${validationReport.quality_report.time_end?.slice(11, 19)}` : "Valid"}
+                    {validationReport.time_range?.start || validationReport.quality_report?.time_start
+                      ? `${(validationReport.time_range?.start || validationReport.quality_report?.time_start).slice(11, 19)} → ${(validationReport.time_range?.end || validationReport.quality_report?.time_end || "").slice(11, 19)}`
+                      : "Validated"}
                   </span>
                 </div>
               </div>

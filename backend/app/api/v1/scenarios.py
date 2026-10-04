@@ -71,7 +71,7 @@ async def upload_scenario_csv(
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Invalid file type. Only CSV network flow telemetry files are supported.")
 
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
     raw_dir = os.path.join(base_dir, "data", "raw")
     os.makedirs(raw_dir, exist_ok=True)
 
@@ -109,12 +109,22 @@ async def upload_scenario_csv(
     }
     uploaded_scenarios_meta.append(meta_entry)
 
+    q_rep = orch.quality_report.model_dump() if hasattr(orch.quality_report, "model_dump") else (orch.quality_report if isinstance(orch.quality_report, dict) else dict(orch.quality_report or {}))
+
     return {
-        "status": "ready",
+        "success": True,
+        "status": "validated",
         "scenario_id": scenario_id,
-        "name": meta_entry["name"],
+        "scenario_name": name_clean,
+        "filename": file.filename,
+        "rows": len(records),
+        "columns": raw_cols,
+        "time_range": {
+            "start": q_rep.get("time_start"),
+            "end": q_rep.get("time_end")
+        },
         "window_count": len(orch.windows),
-        "quality_report": orch.quality_report
+        "quality_report": q_rep
     }
 
 @router.post("/scenarios/{scenario_id}/load")

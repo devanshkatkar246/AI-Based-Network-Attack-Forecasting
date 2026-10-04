@@ -1,3 +1,4 @@
+import traceback
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -12,20 +13,30 @@ app = FastAPI(
 # Enable CORS for local Next.js frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Exception handlers ensuring no raw stack traces exposed to client
+@app.get("/api/health")
+def api_health():
+    return {"status": "ok"}
+
+# Exception handlers ensuring clean structured error responses
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    print(f"Backend Exception on {request.url.path}: {exc}")
+    traceback.print_exc()
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": "InternalServerError",
-            "message": "An unexpected error occurred during backend processing.",
+            "message": str(exc) or "An unexpected error occurred during backend processing.",
             "path": request.url.path
         }
     )
@@ -45,5 +56,6 @@ def root():
     return {
         "message": "Temporal Network World Model API Backend (Phase 1)",
         "docs": "/docs",
-        "health": "/api/v1/health"
+        "health": "/api/health"
     }
+

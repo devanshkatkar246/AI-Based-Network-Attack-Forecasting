@@ -57,6 +57,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Uploaded User Datasets
+backend/data/raw/
+data/raw/
+
+
 # Environment & Secrets
 .env
 .env*.local

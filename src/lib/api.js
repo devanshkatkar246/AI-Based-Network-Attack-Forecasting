@@ -55,15 +55,38 @@ export async function uploadScenarioCSV(file, scenarioName) {
     formData.append("scenario_name", scenarioName);
   }
 
-  const res = await fetch(`${API_BASE}/scenarios/upload`, {
-    method: "POST",
-    body: formData
-  });
+  const uploadUrl = `${API_BASE}/scenarios/upload`;
+  console.log(`[CSV Upload] Sending POST ${uploadUrl}`);
+
+  let res;
+  try {
+    res = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData
+    });
+  } catch (netErr) {
+    console.error(`[CSV Upload] Network request failed for ${uploadUrl}:`, netErr);
+    throw new Error(`NETWORK ERROR: Cannot reach backend server at ${API_BASE}. Please ensure the FastAPI backend is running.`);
+  }
 
   if (!res.ok) {
-    const errData = await res.json().catch(() => ({ detail: "Upload failed." }));
-    throw new Error(errData.detail || "CSV upload and validation failed.");
+    let errData;
+    try {
+      errData = await res.json();
+    } catch (e) {
+      errData = { detail: res.statusText || "Server error occurred." };
+    }
+
+    if (res.status === 422) {
+      const msg = typeof errData.detail === "string" ? errData.detail : JSON.stringify(errData.detail);
+      throw new Error(`VALIDATION ERROR: ${msg}`);
+    } else if (res.status === 400) {
+      throw new Error(`INVALID REQUEST: ${errData.detail || "Invalid CSV payload."}`);
+    } else {
+      throw new Error(`SERVER ERROR (${res.status}): ${errData.detail || errData.message || "Backend processing failed."}`);
+    }
   }
+
   return await res.json();
 }
 

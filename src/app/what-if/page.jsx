@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import AppShell from "@/components/AppShell";
 import StatusBadge from "@/components/StatusBadge";
 import ScenarioSelector from "@/components/ScenarioSelector";
+import EmptyState from "@/components/EmptyState";
 import { SCENARIOS } from "@/data/mockData";
+import { simulateWhatIf } from "@/lib/api";
 import {
   Sliders,
   Play,
@@ -25,9 +28,28 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
   const targetParam = searchParams.get("target");
 
   const scenario = activeScenario || SCENARIOS[0];
-  const simData = scenario.whatIfSimulationData;
+  const defaultSimData = scenario.whatIfSimulationData || {
+    targetHost: "Monitored Subnet Host",
+    targetIp: targetParam || "10.0.2.45",
+    baselineTrajectory: [
+      { stage: "Baseline", time: "NOW", probability: 95 },
+      { stage: "Reconnaissance / Discovery", time: "+10s", probability: 75 },
+      { stage: "Lateral Movement", time: "+30s", probability: 81 }
+    ],
+    interventionTrajectory: [
+      { stage: "Baseline", time: "NOW", isInterventionPoint: true },
+      { stage: "Isolated", time: "+10s", status: "CONTAINED" },
+      { stage: "Contained", time: "+30s", status: "CONTAINED" }
+    ],
+    riskComparison: [
+      { stage: "Lateral Movement (+30s)", baselineProb: 81, interventionProb: 5 }
+    ]
+  };
 
-  const [selectedHost, setSelectedHost] = useState(targetParam || simData.targetHost);
+  const [simResult, setSimResult] = useState(null);
+  const simData = simResult || defaultSimData;
+
+  const [selectedHost, setSelectedHost] = useState(targetParam || simData.targetHost || "FIN-SRV-01");
   const [isSimulated, setIsSimulated] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
 
@@ -37,12 +59,19 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
     }
   }, [targetParam]);
 
-  const handleRunSimulation = () => {
+  const handleRunSimulation = async () => {
     setIsSimulating(true);
-    setTimeout(() => {
+    try {
+      const res = await simulateWhatIf(scenario.id, "isolate", selectedHost);
+      if (res) {
+        setSimResult(res);
+      }
+    } catch (e) {
+      console.warn("What-if simulation fallback:", e);
+    } finally {
       setIsSimulating(false);
       setIsSimulated(true);
-    }, 1200);
+    }
   };
 
   const handleResetSimulation = () => {
@@ -346,9 +375,6 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
     </div>
   );
 }
-
-import Link from "next/link";
-import EmptyState from "@/components/EmptyState";
 
 export default function WhatIfPage() {
   return (

@@ -58,11 +58,8 @@ export function ReplayProvider({ children, initialScenarioId = "enterprise-later
   };
 
   const play = useCallback(() => {
-    if (replayState === REPLAY_STATES.AT_CURRENT) {
-      return;
-    }
     setReplayState(REPLAY_STATES.PLAYING);
-  }, [replayState]);
+  }, []);
 
   const pause = useCallback(() => {
     clearTimer();
@@ -87,15 +84,13 @@ export function ReplayProvider({ children, initialScenarioId = "enterprise-later
     if (currentTickIndex < MAX_TICK_INDEX) {
       const nextIdx = currentTickIndex + 1;
       setCurrentTickIndex(nextIdx);
-      if (nextIdx === CURRENT_FREEZE_INDEX) {
-        setReplayState(REPLAY_STATES.AT_CURRENT);
-      } else if (nextIdx === MAX_TICK_INDEX) {
+      if (nextIdx === MAX_TICK_INDEX) {
         setReplayState(REPLAY_STATES.VALIDATED);
       } else {
         setReplayState(REPLAY_STATES.PAUSED);
       }
     }
-  }, [currentTickIndex, MAX_TICK_INDEX, CURRENT_FREEZE_INDEX]);
+  }, [currentTickIndex, MAX_TICK_INDEX]);
 
   const stepBack = useCallback(() => {
     if (currentTickIndex > 0) {
@@ -108,15 +103,13 @@ export function ReplayProvider({ children, initialScenarioId = "enterprise-later
   const jumpToTick = useCallback((index) => {
     if (index >= 0 && index <= MAX_TICK_INDEX) {
       setCurrentTickIndex(index);
-      if (index === CURRENT_FREEZE_INDEX) {
-        setReplayState(REPLAY_STATES.AT_CURRENT);
-      } else if (index === MAX_TICK_INDEX) {
+      if (index === MAX_TICK_INDEX) {
         setReplayState(REPLAY_STATES.VALIDATED);
       } else {
         setReplayState(REPLAY_STATES.PAUSED);
       }
     }
-  }, [MAX_TICK_INDEX, CURRENT_FREEZE_INDEX]);
+  }, [MAX_TICK_INDEX]);
 
   // Main playback interval loop
   useEffect(() => {
@@ -125,11 +118,6 @@ export function ReplayProvider({ children, initialScenarioId = "enterprise-later
       timerRef.current = setInterval(() => {
         setCurrentTickIndex((prev) => {
           const next = prev + 1;
-          if (next === CURRENT_FREEZE_INDEX) {
-            clearTimer();
-            setReplayState(REPLAY_STATES.AT_CURRENT);
-            return next;
-          }
           if (next >= MAX_TICK_INDEX) {
             clearTimer();
             setReplayState(REPLAY_STATES.VALIDATED);
@@ -143,7 +131,7 @@ export function ReplayProvider({ children, initialScenarioId = "enterprise-later
     }
 
     return () => clearTimer();
-  }, [replayState, playbackSpeed, MAX_TICK_INDEX, CURRENT_FREEZE_INDEX]);
+  }, [replayState, playbackSpeed, MAX_TICK_INDEX]);
 
   const value = {
     activeScenarioId,
