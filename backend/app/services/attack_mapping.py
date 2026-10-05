@@ -25,20 +25,32 @@ class AttackMappingService:
         return None
 
     def map_behavior_to_technique(self, behavior_name: str) -> Optional[MitreTechnique]:
-        behavior_lower = behavior_name.lower()
+        if not behavior_name:
+            return None
+        
+        behavior_lower = str(behavior_name).strip().lower()
+        if behavior_lower in ["benign", "baseline", "normal", "unknown", "none", ""]:
+            return None
+
+        # Check explicit tactic & technique matches
+        if "recon" in behavior_lower or "scan" in behavior_lower:
+            return self.get_technique("T1046")
+        if "discovery" in behavior_lower or "account" in behavior_lower:
+            return self.get_technique("T1087.002")
+        if "cred" in behavior_lower or "brute" in behavior_lower or "lsass" in behavior_lower:
+            return self.get_technique("T1003.001")
+        if "lateral" in behavior_lower or "psexec" in behavior_lower or "smb" in behavior_lower:
+            return self.get_technique("T1021.002")
+        if "c2" in behavior_lower or "command" in behavior_lower or "beacon" in behavior_lower or "web" in behavior_lower:
+            return self.get_technique("T1071.001")
+        if "exfil" in behavior_lower or "cloud" in behavior_lower:
+            return self.get_technique("T1526")
+
+        # Fallback: check if technique_name or technique_id is contained in behavior_lower
         for tech_id, tech in self.kb_data.get("techniques", {}).items():
             if tech["technique_name"].lower() in behavior_lower or tech_id.lower() in behavior_lower:
                 return MitreTechnique(**tech)
-            if "recon" in behavior_lower and tech["tactic"] == "Reconnaissance":
-                return MitreTechnique(**tech)
-            if "psexec" in behavior_lower or "smb" in behavior_lower or "lateral" in behavior_lower:
-                if tech["technique_id"] == "T1021.002":
-                    return MitreTechnique(**tech)
-            if "discovery" in behavior_lower and tech["technique_id"] == "T1087.002":
-                return MitreTechnique(**tech)
-            if "c2" in behavior_lower or "egress" in behavior_lower:
-                if tech["technique_id"] == "T1071.001":
-                    return MitreTechnique(**tech)
+
         return None
 
     def get_all_techniques(self) -> List[MitreTechnique]:

@@ -28,20 +28,24 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 bg-[#11151B] border-r border-[#2A323C] flex flex-col h-screen sticky top-0 z-30 select-none">
-      {/* Brand Header - Typographic Identity */}
-      <div className="p-4 border-b border-[#2A323C]">
-        <div className="text-[12px] font-mono font-bold tracking-widest text-[#E7EAF0] uppercase">
-          TECH πRATES
+    <aside className="w-60 bg-[#11161D] border-r border-[#27303A] flex flex-col h-screen sticky top-0 z-30 select-none">
+      {/* Brand Header - Typographic Identity (clickable, routes to Home) */}
+      <Link
+        href="/"
+        aria-label="Go to The Forecaster home"
+        className="block p-4 border-b border-[#27303A] hover:bg-[#151B23] transition-colors"
+      >
+        <div className="text-[13px] font-bold tracking-wider text-[#E8EDF3] uppercase">
+          THE FORECASTER
         </div>
-        <div className="text-[10px] font-mono text-[#9BA4B0] tracking-tight leading-tight mt-1">
+        <div className="text-[10px] font-mono text-[#6F95D6] tracking-tight leading-tight mt-0.5 font-semibold">
           TEMPORAL NETWORK INTELLIGENCE
         </div>
-      </div>
+      </Link>
 
       {/* Navigation Links */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        <div className="px-3 py-1.5 text-[9px] font-mono font-bold uppercase text-[#6F7885] tracking-widest">
+        <div className="px-3 py-1.5 text-[9px] font-mono font-bold uppercase text-[#6C7987] tracking-widest">
           NAVIGATION
         </div>
         {NAV_ITEMS.map((item) => {
@@ -52,13 +56,14 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded text-xs font-mono font-semibold transition-colors ${
+              aria-current={isActive ? "page" : undefined}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                 isActive
-                  ? "bg-[#1D242D] text-[#6F8FBE] border-l-2 border-[#6F8FBE]"
-                  : "text-[#9BA4B0] hover:text-[#E7EAF0] hover:bg-[#191F27]"
+                  ? "bg-[#19202A] text-[#6F95D6] font-semibold border-l-2 border-[#6F95D6]"
+                  : "text-[#9AA6B2] hover:text-[#E8EDF3] hover:bg-[#151B23]"
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? "text-[#6F8FBE]" : "text-[#6F7885]"}`} />
+              <Icon className={`w-4 h-4 ${isActive ? "text-[#6F95D6]" : "text-[#6C7987]"}`} />
               <span className="tracking-wide">{item.label}</span>
             </Link>
           );
@@ -66,8 +71,8 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom Status */}
-      <div className="p-3.5 border-t border-[#2A323C] font-mono text-[10px] text-[#9BA4B0] flex items-center justify-between">
-        <span>SIH 26153</span>
+      <div className="p-3.5 border-t border-[#27303A] font-mono text-[10px] text-[#9AA6B2] flex items-center justify-between">
+        <span className="text-[#6C7987]">SIH 26153</span>
         <StatusBadge status="ONLINE" size="sm" />
       </div>
     </aside>

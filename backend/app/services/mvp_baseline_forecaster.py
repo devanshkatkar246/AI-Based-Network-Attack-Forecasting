@@ -86,8 +86,8 @@ class MVPBaselineForecaster(ForecastEngine):
             trajectory.append(TrajectoryStep(
                 id=f"step-obs-{idx}",
                 stage=norm_p.value.title(),
-                techniqueId=tech.technique_id if tech else "T1046",
-                techniqueName=tech.technique_name if tech else st.phase,
+                techniqueId=tech.technique_id if tech else None,
+                techniqueName=tech.technique_name if tech else "Normal Traffic",
                 status="OBSERVED",
                 semanticState="observed",
                 timestamp=st.timestamp,
@@ -104,8 +104,8 @@ class MVPBaselineForecaster(ForecastEngine):
         trajectory.append(TrajectoryStep(
             id="step-current",
             stage=current_norm_phase.value.title(),
-            techniqueId=cur_tech.technique_id if cur_tech else "T1087.002",
-            techniqueName=cur_tech.technique_name if cur_tech else "Domain Account Discovery",
+            techniqueId=cur_tech.technique_id if cur_tech else None,
+            techniqueName=cur_tech.technique_name if cur_tech else "Active State",
             status="CURRENT",
             semanticState="current",
             timestamp=current_state.timestamp,
@@ -154,7 +154,7 @@ class MVPBaselineForecaster(ForecastEngine):
             predictions.append({
                 "horizon_seconds": h_sec,
                 "behavior": pred_phase.value,
-                "technique_id": tech.technique_id if tech else "T1021.002",
+                "technique_id": tech.technique_id if tech else None,
                 "score": prob_val,
                 "probability": prob_val
             })
@@ -162,8 +162,8 @@ class MVPBaselineForecaster(ForecastEngine):
             trajectory.append(TrajectoryStep(
                 id=f"step-forecast-{k+1}",
                 stage=pred_phase.value.title(),
-                techniqueId=tech.technique_id if tech else "T1021.002",
-                techniqueName=tech.technique_name if tech else "SMB/PsExec Execution",
+                techniqueId=tech.technique_id if tech else None,
+                techniqueName=tech.technique_name if tech else "Modelled Transition",
                 status="PENDING",
                 semanticState="forecast",
                 estimatedTime=f"+{h_sec}s",

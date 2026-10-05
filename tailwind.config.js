@@ -9,64 +9,66 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#F7F5EE", // Primary warm ivory background
+        background: "#0B0E12", // Application background
         surface: {
-          DEFAULT: "#FFFDF8", // Card surface
-          secondary: "#FBFAF6", // Secondary surface
-          sidebar: "#EFECE4", // Sidebar surface
-          hover: "#F3EFE6",
-          active: "#EAE5D9"
+          DEFAULT: "#151A21", // Primary surface
+          secondary: "#191F27", // Secondary surface
+          sidebar: "#10141A", // Sidebar background
+          elevated: "#1D232C", // Elevated surface
+          hover: "#1D232C",
+          active: "#252D38"
         },
         navy: {
-          900: "#17191C", // Primary text
-          800: "#17191C",
-          700: "#2B2E33",
-          600: "#5F6268"
+          900: "#E7EBF0", // Primary text
+          800: "#E7EBF0",
+          700: "#A7B0BC",
+          600: "#737D89"
         },
         slate: {
-          50: "#FBFAF6",
-          100: "#F7F5EE",
-          200: "#E5E1D8",
-          300: "#D6D1C5",
-          400: "#8B8D91",
-          500: "#5F6268",
-          600: "#3D4045",
-          700: "#2B2E33",
-          800: "#1F2125",
-          900: "#17191C"
+          50: "#10141A",
+          100: "#151A21",
+          200: "#191F27",
+          300: "#1D232C",
+          400: "#2A323D",
+          500: "#737D89",
+          600: "#A7B0BC",
+          700: "#A7B0BC",
+          800: "#151A21",
+          900: "#10141A",
+          950: "#0B0E12"
         },
         accent: {
-          DEFAULT: "#314B78", // Deep muted indigo / blue
-          light: "#F0F4F9",
-          border: "#C4D0E3",
-          steel: "#657A9C", // Muted steel blue
-          indigo: "#314B78"
+          DEFAULT: "#7898C7", // Indigo / Blue accent
+          light: "#192333",
+          border: "#35404D",
+          steel: "#7898C7",
+          indigo: "#7898C7"
         },
         forecast: {
-          DEFAULT: "#314B78", // Deep muted indigo
-          light: "#F0F4F9",
-          border: "#657A9C",
-          dash: "#657A9C"
+          DEFAULT: "#7898C7",
+          light: "#192333",
+          border: "#35404D",
+          dash: "#7898C7"
         },
         actual: {
-          DEFAULT: "#557A62", // Muted dark green
-          light: "#F1F5F2",
-          border: "#A5BDAC"
+          DEFAULT: "#6D9278", // Muted green
+          light: "#19261E",
+          border: "#354D3D"
         },
         observed: {
-          DEFAULT: "#17191C",
-          light: "#FBFAF6",
-          border: "#D6D1C5"
+          DEFAULT: "#A7B0BC",
+          light: "#151A21",
+          border: "#2A323D"
         },
         warning: {
-          DEFAULT: "#B68432", // Muted amber
-          light: "#FAF6EF",
-          border: "#E2D3B8"
+          DEFAULT: "#B58A43", // Muted amber
+          light: "#292116",
+          border: "#4D3A1F"
         },
         critical: {
-          DEFAULT: "#9A4D48", // Muted dark red
-          light: "#F9F2F1",
-          border: "#D9BEBC"
+          DEFAULT: "#A85D59", // Muted dark red
+          light: "#291919",
+          border: "#4D2525"
         }
       },
       fontFamily: {
@@ -74,12 +76,13 @@ module.exports = {
         mono: ["IBM Plex Mono", "JetBrains Mono", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"]
       },
       boxShadow: {
-        subtle: "0 1px 2px 0 rgba(23, 25, 28, 0.03)",
-        card: "0 1px 3px 0 rgba(23, 25, 28, 0.04), 0 1px 2px -1px rgba(23, 25, 28, 0.03)",
-        cardHover: "0 4px 12px -2px rgba(23, 25, 28, 0.06), 0 2px 4px -2px rgba(23, 25, 28, 0.03)",
-        forecast: "0 0 12px -2px rgba(49, 75, 120, 0.12)"
+        subtle: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+        card: "0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.3)",
+        cardHover: "0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3)",
+        forecast: "0 0 12px -2px rgba(120, 152, 199, 0.15)"
       }
     },
   },
   plugins: [],
 };
+

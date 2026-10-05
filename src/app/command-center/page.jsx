@@ -42,8 +42,12 @@ function CommandCenterInner({ activeScenario, activeScenarioId }) {
       {/* 1. Dynamic Telemetry Metric Strip */}
       <TelemetryStrip telemetry={activeScenario.telemetry} />
 
-      {/* 2. Visual Centerpiece: Attack Trajectory Timeline */}
-      <AttackTrajectory trajectory={activeScenario.trajectory} />
+      {/* 2. Hero Visual Centerpiece: Full Temporal Attack Trajectory Graph */}
+      <AttackTrajectory
+        trajectory={activeScenario.trajectory}
+        forecast={activeScenario.forecast}
+        trajectoryGraph={activeScenario.trajectoryGraph}
+      />
 
       {/* 3. Hero Analytical Cards: Current State | Model Forecast | Early Warning Lead Time */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

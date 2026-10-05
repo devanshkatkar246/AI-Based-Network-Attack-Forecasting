@@ -82,8 +82,8 @@ class NetworkState(BaseModel):
 class TrajectoryStep(BaseModel):
     id: str
     stage: str
-    techniqueId: str
-    techniqueName: str
+    techniqueId: Optional[str] = None
+    techniqueName: Optional[str] = None
     status: str  # "OBSERVED", "CURRENT", "FORECAST", "ACTUAL", "PENDING"
     semanticState: str  # "observed", "current", "forecast", "actual"
     timestamp: Optional[str] = None

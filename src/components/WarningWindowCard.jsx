@@ -18,29 +18,29 @@ export default function WarningWindowCard({ warningWindow }) {
     }
   }, [warningWindow]);
 
-  // Handle UNAVAILABLE warning lead time (Section 16 & 17)
+  // Handle UNAVAILABLE warning lead time
   if (!warningWindow || initialLeadTime === null || initialLeadTime === undefined) {
     return (
-      <div className="bg-[#151A21] border border-[#2A323C] rounded-xl p-5 shadow-card h-full flex flex-col justify-between select-none">
-        <div className="flex items-center justify-between pb-3 border-b border-[#2A323C]">
-          <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-[#9BA4B0]">
+      <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between select-none">
+        <div className="flex items-center justify-between pb-3 border-b border-[#27303A]">
+          <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-[#9AA6B2]">
             EARLY WARNING
           </h2>
-          <span className="font-mono text-[10px] text-[#6F7885]">STANDBY</span>
+          <span className="font-mono text-[10px] text-[#6C7987]">STANDBY</span>
         </div>
 
-        <div className="my-4 p-3 bg-[#191F27] border border-[#2A323C] rounded flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-[#6F7885] shrink-0 mt-0.5" />
-          <div className="font-mono text-xs text-[#9BA4B0] space-y-1">
-            <div className="font-bold text-[#E7EAF0]">WARNING LEAD TIME</div>
-            <div className="text-sm font-bold text-[#6F7885]">Not available</div>
-            <p className="text-[11px] text-[#6F7885] mt-1">
+        <div className="my-4 p-3.5 bg-[#19202A] border border-[#27303A] rounded-lg flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-[#6C7987] shrink-0 mt-0.5" />
+          <div className="text-xs text-[#9AA6B2] space-y-1">
+            <div className="font-bold text-[#E8EDF3]">WARNING LEAD TIME</div>
+            <div className="text-sm font-bold text-[#6C7987]">Not available</div>
+            <p className="text-[11px] text-[#6C7987] mt-1">
               Reason: Insufficient ground truth / model output in current temporal state window.
             </p>
           </div>
         </div>
 
-        <div className="pt-3 border-t border-[#2A323C] text-[10px] font-mono text-[#6F7885]">
+        <div className="pt-3 border-t border-[#27303A] text-[10px] font-mono text-[#6C7987]">
           Target asset: {warningWindow?.targetAsset || "Monitored Subnet"}
         </div>
       </div>
@@ -52,54 +52,54 @@ export default function WarningWindowCard({ warningWindow }) {
 
   return (
     <div
-      className={`bg-[#151A21] border border-[#2A323C] rounded-xl p-5 shadow-card h-full flex flex-col justify-between transition-all select-none ${
-        isFrozenAtCurrent ? "ring-2 ring-[#6F8FBE]/40" : ""
+      className={`bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between transition-all select-none ${
+        isFrozenAtCurrent ? "ring-2 ring-[#6F95D6]/40" : ""
       }`}
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#2A323C]">
-        <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-[#9BA4B0]">
+      <div className="flex items-center justify-between pb-3 border-b border-[#27303A]">
+        <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-[#9AA6B2]">
           EARLY WARNING
         </h2>
-        <span className="font-mono text-[10px] font-bold text-[#B98A3A] bg-[#2A2318] border border-[#4A3C26] px-2 py-0.5 rounded">
+        <span className="font-mono text-[10px] font-bold text-[#C59A45] bg-[#2A2318] border border-[#C59A45]/30 px-2 py-0.5 rounded">
           {warningWindow.horizonLabel || `${timeLeft} sec Horizon`}
         </span>
       </div>
 
       {/* Visually Dominant Metric */}
-      <div className="my-3 font-mono">
-        <div className="text-4xl font-mono font-bold text-[#E7EAF0] tracking-tight flex items-baseline gap-1.5">
+      <div className="my-3">
+        <div className="text-4xl sm:text-5xl font-mono font-bold text-[#E8EDF3] tracking-tight flex items-baseline gap-2">
           <span>{timeLeft}</span>
-          <span className="text-xs font-normal text-[#9BA4B0] font-sans">sec</span>
+          <span className="text-sm font-normal text-[#9AA6B2] font-sans">sec</span>
         </div>
-        <div className="text-[11px] text-[#9BA4B0] mt-0.5">
+        <div className="text-xs text-[#9AA6B2] mt-0.5">
           estimated warning lead time
         </div>
-        <div className="text-xs text-[#E7EAF0] mt-2 font-semibold">
-          Predicted event: <strong className="text-[#6F8FBE]">{predictedEvent}</strong>
+        <div className="text-xs text-[#E8EDF3] mt-2.5 font-medium">
+          Predicted event: <strong className="text-[#6F95D6] font-semibold">{predictedEvent}</strong>
         </div>
       </div>
 
       {/* Action Area */}
-      <div className="pt-3 border-t border-[#2A323C] font-mono">
+      <div className="pt-3 border-t border-[#27303A]">
         {isFrozenAtCurrent ? (
           <button
             onClick={revealFuture}
-            className="w-full bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] rounded-lg px-3.5 py-2 text-xs font-mono font-bold flex items-center justify-between transition-colors shadow-subtle group"
+            className="w-full bg-[#6F95D6] hover:bg-[#85A9E6] text-[#0B0F14] rounded-lg px-3.5 py-2 text-xs font-mono font-bold flex items-center justify-between transition-colors shadow-sm group"
           >
             <span className="flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#0D1015]" />
+              <Sparkles className="w-3.5 h-3.5 text-[#0B0F14]" />
               <span>REVEAL FUTURE EVENT</span>
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#0D1015] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+            <ArrowRight className="w-3.5 h-3.5 text-[#0B0F14] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
           </button>
         ) : (
           <Link
             href="/what-if"
-            className="w-full bg-[#191F27] hover:bg-[#1D242D] text-[#E7EAF0] border border-[#2A323C] hover:border-[#6F8FBE] rounded-lg px-3.5 py-2 text-xs font-mono font-semibold flex items-center justify-between transition-colors group"
+            className="w-full bg-[#19202A] hover:bg-[#1E2632] text-[#E8EDF3] border border-[#27303A] hover:border-[#6F95D6] rounded-lg px-3.5 py-2 text-xs font-mono font-medium flex items-center justify-between transition-colors group"
           >
             <span className="truncate pr-2">{recommendedAction}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#6F8FBE] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+            <ArrowRight className="w-3.5 h-3.5 text-[#6F95D6] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
           </Link>
         )}
       </div>

@@ -39,18 +39,18 @@ export default function ForecastEvidenceSection({
     : defaultTimeline;
 
   return (
-    <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-5 shadow-card h-full flex flex-col justify-between font-mono select-none">
+    <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between select-none">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-4 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#27303A] mb-4 gap-2">
         <div>
-          <h2 className="text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase tracking-wider">
+          <h2 className="text-xs font-bold text-[#E8EDF3] uppercase tracking-wider font-mono">
             WHY THIS FORECAST?
           </h2>
-          <p className="text-[11px] text-[#5F6268] dark:text-[#8B8D91] mt-0.5">
+          <p className="text-xs text-[#9AA6B2] mt-0.5">
             Network signals + temporal sequence + topology evidence
           </p>
         </div>
-        <span className="text-[10px] text-[#8B8D91] uppercase font-semibold">
+        <span className="text-xs text-[#9AA6B2] uppercase font-mono">
           EXPLAINABLE AI EVIDENCE
         </span>
       </div>
@@ -58,21 +58,21 @@ export default function ForecastEvidenceSection({
       {/* 3 Evidence Group Columns */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {/* COLUMN 01: NETWORK SIGNALS */}
-        <div className="bg-[#FBFAF6] dark:bg-[#17191C] p-3.5 rounded-lg border border-[#E5E1D8] dark:border-[#2B2E33] h-full flex flex-col justify-between">
+        <div className="bg-[#11161D] p-4 rounded-lg border border-[#27303A] h-full flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-1.5 mb-3 pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] text-xs font-bold text-[#314B78] dark:text-[#9AB0D3]">
-              <Sliders className="w-3.5 h-3.5 text-[#314B78]" />
+            <div className="flex items-center gap-1.5 mb-3 pb-2 border-b border-[#27303A] text-xs font-bold text-[#6F95D6] font-mono">
+              <Sliders className="w-3.5 h-3.5 text-[#6F95D6]" />
               <span>01 NETWORK SIGNALS</span>
             </div>
 
-            <div className="space-y-2.5 text-xs">
+            <div className="space-y-3 text-xs">
               {signalsToRender.map((item, idx) => (
-                <div key={idx} className="pb-2 border-b border-[#E5E1D8]/60 dark:border-[#2B2E33] last:border-0">
+                <div key={idx} className="pb-2 border-b border-[#27303A] last:border-0 space-y-0.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#17191C] dark:text-[#F7F5EE] text-[11px] truncate">{item.feature}</span>
-                    <span className="text-[10px] font-semibold text-[#314B78] dark:text-[#9AB0D3]">{item.trend}</span>
+                    <span className="font-semibold text-[#E8EDF3] text-xs truncate">{item.feature}</span>
+                    <span className="text-[11px] font-mono font-semibold text-[#6F95D6]">{item.trend}</span>
                   </div>
-                  <div className="text-[10px] text-[#5F6268] dark:text-[#8B8D91] mt-0.5">{item.detail}</div>
+                  <div className="text-xs text-[#9AA6B2]">{item.detail}</div>
                 </div>
               ))}
             </div>
@@ -80,27 +80,27 @@ export default function ForecastEvidenceSection({
         </div>
 
         {/* COLUMN 02: TEMPORAL STREAM */}
-        <div className="bg-[#FBFAF6] dark:bg-[#17191C] p-3.5 rounded-lg border border-[#E5E1D8] dark:border-[#2B2E33] h-full flex flex-col justify-between">
+        <div className="bg-[#11161D] p-4 rounded-lg border border-[#27303A] h-full flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-1.5 mb-3 pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] text-xs font-bold text-[#314B78] dark:text-[#9AB0D3]">
-              <Clock className="w-3.5 h-3.5 text-[#314B78]" />
+            <div className="flex items-center gap-1.5 mb-3 pb-2 border-b border-[#27303A] text-xs font-bold text-[#6F95D6] font-mono">
+              <Clock className="w-3.5 h-3.5 text-[#6F95D6]" />
               <span>02 TEMPORAL STREAM</span>
             </div>
 
-            <div className="space-y-3 relative pl-3 border-l border-[#E5E1D8] dark:border-[#2B2E33] text-xs">
+            <div className="space-y-3 relative pl-3 border-l border-[#27303A] text-xs">
               {timelineToRender.map((item, idx) => (
                 <div key={idx} className="relative">
                   <div
                     className={`w-2 h-2 rounded-full absolute -left-[17px] top-1 ${
-                      item.status === "CURRENT" ? "bg-[#314B78] ring-2 ring-[#314B78]/30" : "bg-[#8B8D91]"
+                      item.status === "CURRENT" ? "bg-[#6F95D6] ring-2 ring-[#6F95D6]/30" : "bg-[#6C7987]"
                     }`}
                   />
                   <div>
-                    <div className="flex items-center gap-1.5 font-bold text-[11px]">
-                      <span className={item.status === "CURRENT" ? "text-[#314B78] dark:text-[#9AB0D3]" : "text-[#17191C] dark:text-[#F7F5EE]"}>{item.time}:</span>
-                      <span className="text-[#17191C] dark:text-[#F7F5EE]">{item.stage}</span>
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <span className={`font-mono ${item.status === "CURRENT" ? "text-[#6F95D6]" : "text-[#E8EDF3]"}`}>{item.time}:</span>
+                      <span className="text-[#E8EDF3]">{item.stage}</span>
                     </div>
-                    <div className="text-[10px] text-[#5F6268] dark:text-[#8B8D91] mt-0.5 leading-snug">{item.label}</div>
+                    <div className="text-xs text-[#9AA6B2] mt-0.5 leading-snug">{item.label}</div>
                   </div>
                 </div>
               ))}
@@ -109,37 +109,45 @@ export default function ForecastEvidenceSection({
         </div>
 
         {/* COLUMN 03: TOPOLOGY EVIDENCE */}
-        <div className="bg-[#FBFAF6] dark:bg-[#17191C] p-3.5 rounded-lg border border-[#E5E1D8] dark:border-[#2B2E33] h-full flex flex-col justify-between">
+        <div className="bg-[#11161D] p-4 rounded-lg border border-[#27303A] h-full flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-1.5 mb-3 pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] text-xs font-bold text-[#314B78] dark:text-[#9AB0D3]">
-              <Network className="w-3.5 h-3.5 text-[#314B78]" />
+            <div className="flex items-center gap-1.5 mb-3 pb-2 border-b border-[#27303A] text-xs font-bold text-[#6F95D6] font-mono">
+              <Network className="w-3.5 h-3.5 text-[#6F95D6]" />
               <span>03 TOPOLOGY EVIDENCE</span>
             </div>
 
             <div className="space-y-3 text-xs pt-0.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-[#17191C] dark:text-[#F7F5EE] text-[11px]">Workstation-302</div>
-                  <div className="text-[10px] text-[#5F6268] dark:text-[#8B8D91]">10.0.2.45 (Compromised)</div>
+              {topologyEvidence?.nodes && topologyEvidence.nodes.length >= 2 ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-[#E8EDF3] text-xs font-mono">{topologyEvidence.nodes[0].label || topologyEvidence.nodes[0].ip}</div>
+                      <div className="text-xs text-[#9AA6B2] font-mono">{topologyEvidence.nodes[0].ip} (Active Source)</div>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#C59A45] font-bold">SOURCE NODE</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 py-1.5 px-2 bg-[#151B23] border border-[#27303A] rounded text-[10px] text-[#6F95D6] font-mono font-bold">
+                    <span>{topologyEvidence.edgeLabel || "COMMUNICATION EDGE"}</span>
+                    <ArrowRight className="w-3 h-3 text-[#6F95D6]" />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-[#E8EDF3] text-xs font-mono">{topologyEvidence.nodes[1].label || topologyEvidence.nodes[1].ip}</div>
+                      <div className="text-xs text-[#9AA6B2] font-mono">{topologyEvidence.nodes[1].ip} (Projected Target)</div>
+                    </div>
+                    <span className="text-[10px] font-mono text-[#6F95D6] font-bold">TARGET NODE</span>
+                  </div>
+                </>
+              ) : (
+                <div className="p-3 bg-[#151B23] border border-[#27303A] rounded text-xs text-[#9AA6B2]">
+                  Topology graph nodes and communication edges extracted from current temporal slice.
                 </div>
-                <span className="text-[10px] text-[#B68432] font-bold">INFECTED NODE</span>
-              </div>
+              )}
 
-              <div className="flex items-center gap-1.5 py-1.5 px-2 bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded text-[10px] text-[#314B78] dark:text-[#9AB0D3] font-bold">
-                <span>NEW INTERNAL EDGE</span>
-                <ArrowRight className="w-3 h-3 text-[#314B78]" />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-[#17191C] dark:text-[#F7F5EE] text-[11px]">FIN-SRV-01</div>
-                  <div className="text-[10px] text-[#5F6268] dark:text-[#8B8D91]">10.0.4.12 (Forecast Target)</div>
-                </div>
-                <span className="text-[10px] text-[#314B78] dark:text-[#9AB0D3] font-bold">TARGET NODE</span>
-              </div>
-
-              <div className="pt-2 border-t border-[#E5E1D8] dark:border-[#2B2E33] text-[10px] text-[#5F6268] dark:text-[#8B8D91]">
-                Increased east-west communication detected between Workstation and Server subnets.
+              <div className="pt-2 border-t border-[#27303A] text-xs text-[#9AA6B2]">
+                Active communication flows observed across monitored internal subnets.
               </div>
             </div>
           </div>
@@ -148,5 +156,4 @@ export default function ForecastEvidenceSection({
     </div>
   );
 }
-
 

@@ -41,3 +41,26 @@ class DataValidationService:
             time_end=time_end,
             detected_columns=raw_columns
         )
+
+    @staticmethod
+    def validate_trajectory(trajectory: List[Any]) -> Dict[str, Any]:
+        errors = []
+        warnings = []
+        
+        current_count = sum(1 for step in trajectory if getattr(step, "status", getattr(step, "semanticState", "")) in ["CURRENT", "current"])
+        if current_count != 1:
+            warnings.append(f"Trajectory contains {current_count} CURRENT steps (expected 1).")
+
+        for idx, step in enumerate(trajectory):
+            stage = str(getattr(step, "stage", "")).upper()
+            tech_id = getattr(step, "techniqueId", None)
+            if stage in ["BENIGN", "BASELINE", "NORMAL"] and tech_id and str(tech_id).startswith("T"):
+                errors.append(f"Step '{stage}' has incompatible techniqueId '{tech_id}'.")
+            if stage == "EXFILTRATION" and tech_id == "T1087.002":
+                errors.append(f"Step Exfiltration has mismatched Discovery technique {tech_id}.")
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings
+        }

@@ -26,12 +26,13 @@ export async function fetchScenarios() {
   return [
     {
       id: "enterprise-lateral-movement-01",
-      name: "Enterprise Lateral Movement Demo",
+      name: "Enterprise Lateral Movement",
       description: "Multi-stage attack across subnet 10.0.2.0/24 targeting DC & FIN-SRV.",
       status: "available",
-      category: "READY DEMO"
+      category: "BENCHMARK SCENARIO"
     }
   ];
+
 }
 
 export async function loadScenario(scenarioId) {

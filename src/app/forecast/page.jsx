@@ -10,10 +10,9 @@ import ForecastEvidenceSection from "@/components/forecast/ForecastEvidenceSecti
 import AttackInterpretationFlow from "@/components/forecast/AttackInterpretationFlow";
 import ForecastResultNarrative from "@/components/ForecastResultNarrative";
 import ModelEvaluationSection from "@/components/ModelEvaluationSection";
-import { SCENARIOS } from "@/data/mockData";
 
 function ForecastDeepDiveContent({ activeScenario, setActiveScenarioId }) {
-  const scenario = activeScenario || SCENARIOS[0];
+  const scenario = activeScenario;
   const [selectedHorizon, setSelectedHorizon] = useState("30s");
 
   return (
@@ -71,7 +70,8 @@ import EmptyState from "@/components/EmptyState";
 
 export default function ForecastPage() {
   return (
-    <AppShell title="ATTACK FORECAST DEEP-DIVE">
+    <AppShell title="ATTACK FORECAST">
+
       {({ activeScenario, activeScenarioId, setActiveScenarioId }) => {
         if (!activeScenarioId) {
           return (

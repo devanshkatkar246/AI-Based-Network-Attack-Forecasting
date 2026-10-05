@@ -27,30 +27,31 @@ def list_scenarios():
     default_scenarios = [
         {
             "id": "enterprise-lateral-movement-01",
-            "name": "Enterprise Lateral Movement Demo",
+            "name": "Enterprise Lateral Movement",
             "source_dataset": "enterprise_lateral_movement_01.csv",
             "description": "Multi-stage SMB lateral movement from workstation to internal domain controller.",
             "status": "available",
-            "category": "READY DEMO"
+            "category": "BENCHMARK SCENARIO"
         },
         {
             "id": "tech-pirates-mvp-demo",
-            "name": "TECH πRATES Integration Demo",
+            "name": "Baseline Temporal Attack Telemetry",
             "source_dataset": "tech_pirates_mvp_demo.csv",
             "description": "Multi-window temporal attack telemetry dataset for end-to-end forecasting validation.",
             "status": "available",
-            "category": "READY DEMO"
+            "category": "BENCHMARK SCENARIO"
         },
         {
             "id": "cloud-exfiltration-02",
-            "name": "Cloud Exfiltration Burst Demo",
+            "name": "Cloud Exfiltration Vector",
             "source_dataset": "cloud_exfiltration_02.csv",
             "description": "STS token credential reuse & high-volume S3 bucket exfiltration.",
-            "status": "demo_only",
-            "category": "READY DEMO"
+            "status": "available",
+            "category": "BENCHMARK SCENARIO"
         }
     ]
     return default_scenarios + uploaded_scenarios_meta
+
 
 
 @router.get("/scenarios/{scenario_id}")

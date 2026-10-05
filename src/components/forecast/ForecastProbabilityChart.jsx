@@ -12,25 +12,23 @@ import {
   ReferenceLine
 } from "recharts";
 
-import { useTheme } from "@/context/ThemeContext";
-
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const val = data.forecast ?? data.observed;
     return (
-      <div className="bg-[#17191C] text-white p-2.5 rounded-md shadow-lg font-mono text-xs border border-[#314B78]">
-        <div className="text-[10px] text-[#8B8D91] border-b border-slate-700 pb-1 mb-1 font-semibold">
+      <div className="bg-[#11161D] text-[#E8EDF3] p-2.5 rounded-lg shadow-lg font-mono text-xs border border-[#6F95D6]/40">
+        <div className="text-[10px] text-[#9AA6B2] border-b border-[#27303A] pb-1 mb-1 font-semibold">
           HORIZON: {label}
         </div>
         {val !== null && (
-          <div className="flex justify-between gap-4 text-[#657A9C] text-xs">
+          <div className="flex justify-between gap-4 text-[#6F95D6] text-xs">
             <span>Projection Level:</span>
             <span className="font-bold">{val}%</span>
           </div>
         )}
         {data.upper !== null && (
-          <div className="flex justify-between gap-4 text-slate-400 text-[10px] mt-0.5">
+          <div className="flex justify-between gap-4 text-[#9AA6B2] text-[10px] mt-0.5">
             <span>Bounds:</span>
             <span>{data.lower}% – {data.upper}%</span>
           </div>
@@ -42,42 +40,39 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function ForecastProbabilityChart({ data, selectedHorizon }) {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
   if (!data || data.length === 0) return null;
 
   const horizonLabel = selectedHorizon
     ? selectedHorizon.startsWith("+") ? selectedHorizon : `+${selectedHorizon}`
     : "+30s";
 
-  const axisStroke = isDark ? "#334155" : "#E5E1D8";
-  const axisTickFill = isDark ? "#94A3B8" : "#5F6268";
-  const nowMarkerColor = isDark ? "#F8FAFC" : "#17191C";
-  const observedLineColor = isDark ? "#94A3B8" : "#5F6268";
+  const axisStroke = "#27303A";
+  const axisTickFill = "#9AA6B2";
+  const nowMarkerColor = "#E8EDF3";
+  const observedLineColor = "#9AA6B2";
 
   return (
-    <div className="bg-[#FFFDF8] dark:bg-slate-900 border border-[#E5E1D8] dark:border-slate-800 rounded-xl p-5 shadow-subtle h-full flex flex-col justify-between font-mono">
+    <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between select-none">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8] dark:border-slate-800 mb-2">
+      <div className="flex items-center justify-between pb-3 border-b border-[#27303A] mb-2">
         <div>
-          <h2 className="text-xs font-bold text-[#17191C] dark:text-slate-100 uppercase tracking-wider">
+          <h2 className="text-xs font-bold text-[#E8EDF3] uppercase tracking-wider font-mono">
             FORECAST TRAJECTORY CURVE
           </h2>
-          <p className="text-[11px] text-[#5F6268] dark:text-slate-500 mt-0.5">
+          <p className="text-xs text-[#9AA6B2] mt-0.5">
             Observed history (T-90s → NOW) and forecast horizon projections
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-3 text-[11px]">
+        <div className="flex items-center gap-3 text-xs font-mono">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-[#5F6268] dark:bg-slate-300" />
-            <span className="text-[#5F6268] dark:text-slate-300 font-medium">Observed</span>
+            <span className="w-2.5 h-0.5 bg-[#9AA6B2]" />
+            <span className="text-[#9AA6B2] font-medium">Observed</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-0.5 bg-[#314B78] border-t border-dashed border-[#314B78]" />
-            <span className="text-[#314B78] font-bold">Forecast</span>
+            <span className="w-2.5 h-0.5 bg-[#6F95D6] border-t border-dashed border-[#6F95D6]" />
+            <span className="text-[#6F95D6] font-bold">Forecast</span>
           </div>
         </div>
       </div>
@@ -88,8 +83,8 @@ export default function ForecastProbabilityChart({ data, selectedHorizon }) {
           <AreaChart data={data} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="projectedRangeShade" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#314B78" stopOpacity={isDark ? 0.35 : 0.15} />
-                <stop offset="95%" stopColor="#314B78" stopOpacity={0.01} />
+                <stop offset="5%" stopColor="#6F95D6" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#6F95D6" stopOpacity={0.01} />
               </linearGradient>
             </defs>
 
@@ -126,12 +121,12 @@ export default function ForecastProbabilityChart({ data, selectedHorizon }) {
             {/* Vertical Marker for Selected Horizon */}
             <ReferenceLine
               x={horizonLabel}
-              stroke="#314B78"
+              stroke="#6F95D6"
               strokeWidth={1.5}
               strokeDasharray="2 2"
               label={{
                 value: horizonLabel,
-                fill: "#314B78",
+                fill: "#6F95D6",
                 fontSize: 10,
                 position: "top",
                 fontFamily: "monospace",
@@ -160,22 +155,20 @@ export default function ForecastProbabilityChart({ data, selectedHorizon }) {
             <Line
               type="monotone"
               dataKey="forecast"
-              stroke="#314B78"
+              stroke="#6F95D6"
               strokeWidth={2.5}
               strokeDasharray="4 4"
-              dot={{ r: 4, fill: "#314B78", stroke: isDark ? "#1E293B" : "#FFFDF8", strokeWidth: 1.5 }}
+              dot={{ r: 4, fill: "#6F95D6", stroke: "#11161D", strokeWidth: 1.5 }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {/* Footer */}
-      <div className="pt-2 border-t border-[#E5E1D8] dark:border-slate-800 flex items-center justify-between text-[10px] text-[#8B8D91] dark:text-slate-500">
-        <span>Demonstration Forecast Projection</span>
-        <span className="text-[#314B78] font-bold">Selected Horizon: {horizonLabel}</span>
+      <div className="pt-2 border-t border-[#27303A] flex items-center justify-between text-xs text-[#9AA6B2] font-mono">
+        <span>Forecast Projection — Model Rollout</span>
+        <span className="text-[#6F95D6] font-bold">Selected Horizon: {horizonLabel}</span>
       </div>
     </div>
   );
 }
-
-

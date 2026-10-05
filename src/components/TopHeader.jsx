@@ -3,17 +3,18 @@
 import React, { useState, useEffect } from "react";
 import ScenarioSelector from "./ScenarioSelector";
 import StatusBadge from "./StatusBadge";
-import { useTheme } from "@/context/ThemeContext";
-import { Sun, Moon } from "lucide-react";
 
-export default function TopHeader({ title, activeScenarioName, activeScenarioId, onSelectScenario }) {
+export default function TopHeader({ title, activeScenarioName, activeScenarioId, onSelectScenario, scenariosList }) {
   const [timeString, setTimeString] = useState("");
-  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      setTimeString(now.toUTCString().replace("GMT", "UTC").slice(17, 25) + " UTC");
+      const timeParts = now.toTimeString().split(" ");
+      const timeStr = timeParts[0];
+      const tzMatch = now.toTimeString().match(/\((.+)\)/);
+      const tz = tzMatch ? tzMatch[1].split(" ").map(w => w[0]).join("") : "IST";
+      setTimeString(`${timeStr} ${tz}`);
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -21,51 +22,37 @@ export default function TopHeader({ title, activeScenarioName, activeScenarioId,
   }, []);
 
   return (
-    <header className="h-13 bg-[#11151B] border-b border-[#2A323C] px-6 flex items-center justify-between sticky top-0 z-20 select-none">
+    <header className="h-13 bg-[#11161D] border-b border-[#27303A] px-6 py-3 flex items-center justify-between sticky top-0 z-20 select-none min-w-0">
       {/* Left: Page Title & Active Scenario Indicator */}
-      <div className="flex items-center gap-3">
-        <h1 className="text-xs font-bold font-mono text-[#E7EAF0] uppercase tracking-wider">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <h1 className="text-xs font-bold text-[#E8EDF3] uppercase tracking-wider whitespace-nowrap flex-shrink-0">
           {title}
         </h1>
-        <span className="text-[#2A323C]">|</span>
-        <span className="hidden sm:inline text-[11px] font-mono text-[#6F8FBE]">
+        <span className="text-[#27303A] flex-shrink-0">|</span>
+        <span className="hidden sm:inline text-xs font-mono text-[#6F95D6] truncate min-w-0">
           {activeScenarioName ? activeScenarioName : "No Scenario Loaded"}
         </span>
       </div>
 
       {/* Right: Controls, Status & Time */}
-      <div className="flex items-center gap-3 font-mono text-xs">
+      <div className="flex items-center gap-3 font-mono text-xs flex-shrink-0 ml-4">
         <ScenarioSelector 
           activeScenarioId={activeScenarioId} 
           onSelectScenario={onSelectScenario} 
+          scenariosList={scenariosList}
         />
 
-        <div className="h-3 w-px bg-[#2A323C]" />
+        <div className="h-3 w-px bg-[#27303A]" />
 
         <StatusBadge status={activeScenarioId ? "ACTIVE" : "STANDBY"} size="sm" />
 
-        <div className="h-3 w-px bg-[#2A323C]" />
+        <div className="h-3 w-px bg-[#27303A]" />
 
-        <div className="font-mono text-[11px] text-[#9BA4B0]">
+        <div className="font-mono text-[11px] text-[#9AA6B2] whitespace-nowrap">
           {timeString || "19:55:09 UTC"}
         </div>
-
-        <div className="h-3 w-px bg-[#2A323C]" />
-
-        {/* Theme Mode Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          className="p-1 rounded bg-[#151A21] hover:bg-[#191F27] text-[#9BA4B0] transition-colors border border-[#2A323C] flex items-center justify-center"
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          aria-label="Toggle theme mode"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-3.5 h-3.5 text-[#B98A3A]" />
-          ) : (
-            <Moon className="w-3.5 h-3.5 text-[#6F8FBE]" />
-          )}
-        </button>
       </div>
     </header>
   );
 }
+

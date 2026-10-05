@@ -26,14 +26,14 @@ export default function AttackInterpretationFlow({ attackInterpretation }) {
   const flowsToRender = attackInterpretation?.length ? attackInterpretation : defaultFlows;
 
   return (
-    <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-5 shadow-card font-mono text-xs select-none">
+    <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card select-none">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-4 gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-[#27303A] mb-4 gap-2">
         <div>
-          <h2 className="text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase tracking-wider">
+          <h2 className="text-xs font-bold text-[#E8EDF3] uppercase tracking-wider font-mono">
             ATT&CK BEHAVIOURAL INTERPRETATION
           </h2>
-          <p className="text-[11px] text-[#5F6268] dark:text-[#8B8D91] mt-0.5">
+          <p className="text-xs text-[#9AA6B2] mt-0.5">
             OBSERVED TELEMETRY → INFERRED BEHAVIOUR → ATT&CK TECHNIQUE → TACTIC
           </p>
         </div>
@@ -45,31 +45,31 @@ export default function AttackInterpretationFlow({ attackInterpretation }) {
         {flowsToRender.map((item, idx) => (
           <div
             key={idx}
-            className="p-3.5 bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-lg flex flex-col justify-between space-y-2.5"
+            className="p-3.5 bg-[#11161D] border border-[#27303A] rounded-lg flex flex-col justify-between space-y-3"
           >
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] uppercase font-bold text-[#8B8D91]">
+              <div className="flex items-center justify-between mb-1.5 font-mono">
+                <span className="text-[10px] uppercase font-bold text-[#9AA6B2]">
                   Observed Telemetry
                 </span>
-                <span className="text-[9px] font-bold text-[#5F6268] bg-[#EFECE4] px-1.5 py-0.2 rounded">
+                <span className="text-[9px] font-bold text-[#9AA6B2] bg-[#19202A] px-1.5 py-0.5 rounded border border-[#27303A]">
                   OBSERVED
                 </span>
               </div>
-              <div className="font-semibold text-[#17191C] dark:text-[#F7F5EE] text-[11px]">
+              <div className="font-medium text-[#E8EDF3] text-xs">
                 {item.observed}
               </div>
             </div>
 
-            <div className="pt-2 border-t border-[#E5E1D8] dark:border-[#2B2E33] flex items-center justify-between text-[11px]">
+            <div className="pt-2 border-t border-[#27303A] flex items-center justify-between text-xs">
               <div>
-                <div className="text-[9px] text-[#314B78] dark:text-[#9AB0D3] font-bold uppercase">MODEL-INFERRED TECHNIQUE</div>
-                <div className="font-bold text-[#314B78] dark:text-[#9AB0D3]">{item.technique}</div>
+                <div className="text-[9px] text-[#6F95D6] font-mono font-bold uppercase">MODEL-INFERRED TECHNIQUE</div>
+                <div className="font-bold text-[#6F95D6] text-xs font-mono">{item.technique}</div>
               </div>
-              <ArrowRight className="w-3.5 h-3.5 text-[#8B8D91] flex-shrink-0 mx-1" />
+              <ArrowRight className="w-3.5 h-3.5 text-[#6C7987] flex-shrink-0 mx-1" />
               <div className="text-right">
-                <div className="text-[9px] text-[#5F6268] font-bold uppercase">TACTIC</div>
-                <div className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{item.tactic}</div>
+                <div className="text-[9px] text-[#9AA6B2] font-mono font-bold uppercase">TACTIC</div>
+                <div className="font-bold text-[#E8EDF3] text-xs">{item.tactic}</div>
               </div>
             </div>
           </div>
@@ -78,5 +78,3 @@ export default function AttackInterpretationFlow({ attackInterpretation }) {
     </div>
   );
 }
-
-

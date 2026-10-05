@@ -154,8 +154,8 @@ class TemporalWorldModelEngine(ForecastEngine):
             trajectory.append(TrajectoryStep(
                 id=f"step-obs-{idx}",
                 stage=norm_p.value.title(),
-                techniqueId=tech.technique_id if tech else "T1046",
-                techniqueName=tech.technique_name if tech else st.phase,
+                techniqueId=tech.technique_id if tech else None,
+                techniqueName=tech.technique_name if tech else "Normal Traffic",
                 status="OBSERVED",
                 semanticState="observed",
                 timestamp=st.timestamp,
@@ -173,8 +173,8 @@ class TemporalWorldModelEngine(ForecastEngine):
         trajectory.append(TrajectoryStep(
             id="step-current",
             stage=cur_norm_p.value.title(),
-            techniqueId=cur_tech.technique_id if cur_tech else "T1087.002",
-            techniqueName=cur_tech.technique_name if cur_tech else "Domain Account Discovery",
+            techniqueId=cur_tech.technique_id if cur_tech else None,
+            techniqueName=cur_tech.technique_name if cur_tech else "Active State",
             status="CURRENT",
             semanticState="current",
             timestamp=current_state.timestamp,
@@ -193,15 +193,15 @@ class TemporalWorldModelEngine(ForecastEngine):
             prob_val = float(probs[k, pred_class_idx])
             pred_phase = PHASE_CLASSES[pred_class_idx]
             norm_pred_p = BehaviorTaxonomyService.normalize_behavior(pred_phase)
-            tech_id, tech_name = PHASE_TECH_MAP.get(pred_phase, ("T1021.002", "SMB/PsExec Execution"))
+            tech = self.attack_mapper.map_behavior_to_technique(norm_pred_p.value)
             
             h_sec = int((k + 1) * self.window_size_seconds)
 
             trajectory.append(TrajectoryStep(
                 id=f"step-forecast-{k+1}",
                 stage=norm_pred_p.value.title(),
-                techniqueId=tech_id,
-                techniqueName=tech_name,
+                techniqueId=tech.technique_id if tech else None,
+                techniqueName=tech.technique_name if tech else "Modelled Transition",
                 status="PENDING",
                 semanticState="forecast",
                 estimatedTime=f"+{h_sec}s",

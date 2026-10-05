@@ -27,44 +27,54 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
   const searchParams = useSearchParams();
   const targetParam = searchParams.get("target");
 
-  const scenario = activeScenario || SCENARIOS[0];
-  const defaultSimData = scenario.whatIfSimulationData || {
+  const scenario = activeScenario;
+  const defaultSimData = scenario?.whatIfSimulationData || {
     targetHost: "Monitored Subnet Host",
     targetIp: targetParam || "10.0.2.45",
     baselineTrajectory: [
-      { stage: "Baseline", time: "NOW", probability: 95 },
-      { stage: "Reconnaissance / Discovery", time: "+10s", probability: 75 },
-      { stage: "Lateral Movement", time: "+30s", probability: 81 }
+      { stage: scenario?.currentState || "Baseline", time: "NOW", probability: 95, status: "OBSERVED" },
+      { stage: "Projected Movement", time: "+30s", probability: 75, status: "FORECAST" }
     ],
     interventionTrajectory: [
-      { stage: "Baseline", time: "NOW", isInterventionPoint: true },
-      { stage: "Isolated", time: "+10s", status: "CONTAINED" },
-      { stage: "Contained", time: "+30s", status: "CONTAINED" }
+      { stage: scenario?.currentState || "Baseline", time: "NOW", isInterventionPoint: true, status: "OBSERVED" },
+      { stage: "Vector Contained", time: "+30s", probability: 4, status: "CONTAINED" }
     ],
     riskComparison: [
-      { stage: "Lateral Movement (+30s)", baselineProb: 81, interventionProb: 5 }
+      { stage: "Projected Movement (+30s)", baselineProb: 75, interventionProb: 4 }
     ]
   };
 
   const [simResult, setSimResult] = useState(null);
   const simData = simResult || defaultSimData;
 
-  const [selectedHost, setSelectedHost] = useState(targetParam || simData.targetHost || "FIN-SRV-01");
+  const [selectedHost, setSelectedHost] = useState(targetParam || simData.targetHost || "Monitored Subnet Host");
   const [isSimulated, setIsSimulated] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
 
   useEffect(() => {
     if (targetParam) {
       setSelectedHost(targetParam);
+    } else if (scenario?.warningWindow?.targetAsset) {
+      setSelectedHost(scenario.warningWindow.targetAsset);
+    } else if (scenario?.whatIfSimulationData?.targetHost) {
+      setSelectedHost(scenario.whatIfSimulationData.targetHost);
     }
-  }, [targetParam]);
+  }, [targetParam, scenario?.id, scenario?.warningWindow?.targetAsset, scenario?.whatIfSimulationData?.targetHost]);
+
+  // Reset simulation when scenario switches
+  useEffect(() => {
+    setSimResult(null);
+    setIsSimulated(false);
+  }, [scenario?.id]);
 
   const handleRunSimulation = async () => {
     setIsSimulating(true);
     try {
-      const res = await simulateWhatIf(scenario.id, "isolate", selectedHost);
-      if (res) {
-        setSimResult(res);
+      if (scenario?.id) {
+        const res = await simulateWhatIf(scenario.id, "isolate", selectedHost);
+        if (res) {
+          setSimResult(res);
+        }
       }
     } catch (e) {
       console.warn("What-if simulation fallback:", e);
@@ -78,20 +88,21 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
     setIsSimulated(false);
   };
 
+
   return (
-    <div className="space-y-6 font-mono select-none">
+    <div className="space-y-6 select-none">
       {/* 1. Header */}
-      <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-4 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase tracking-wider">
-              COMPARE PROJECTED FUTURES
+            <h1 className="text-xs font-bold text-[#E8EDF3] uppercase tracking-wider font-mono">
+              INTERVENTION ANALYSIS
             </h1>
             <StatusBadge status="FORECAST" size="sm" customLabel="DECISION SUPPORT" />
           </div>
-          <p className="text-xs text-[#5F6268] dark:text-[#8B8D91]">
+          <p className="text-xs text-[#9AA6B2]">
             COUNTERFACTUAL INTERVENTION SIMULATION • Current State:{" "}
-            <span className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{scenario.currentState}</span>
+            <span className="font-bold text-[#E8EDF3] font-mono">{scenario.currentState}</span>
           </p>
         </div>
 
@@ -102,44 +113,44 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
       </div>
 
       {/* Safety Notice Badge */}
-      <div className="bg-[#F0F4F9] dark:bg-[#1E2633] border border-[#657A9C]/40 rounded-lg p-3 text-xs flex items-center justify-between text-[#314B78] dark:text-[#9AB0D3]">
-        <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 flex-shrink-0" />
+      <div className="bg-[#11161D] border border-[#27303A] rounded-xl p-3.5 text-xs flex items-center justify-between text-[#9AA6B2]">
+        <div className="flex items-center gap-2.5">
+          <Info className="w-4 h-4 text-[#6F95D6] shrink-0" />
           <span>
-            <strong>SIMULATED MODEL PROJECTION:</strong> Interventions evaluate hypothetical future trajectories. <strong>NOT ACTUAL NETWORK ACTION.</strong>
+            <strong className="text-[#E8EDF3]">SIMULATED MODEL PROJECTION:</strong> Interventions evaluate hypothetical future trajectories. <strong className="text-[#C59A45]">NOT ACTUAL NETWORK ACTION.</strong>
           </span>
         </div>
         <StatusBadge status="NORMAL" size="sm" customLabel="SIMULATED ONLY" />
       </div>
 
       {/* 2. Intervention Control Panel */}
-      <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-5 shadow-card">
-        <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase">
-            <Sliders className="w-4 h-4 text-[#314B78]" />
+      <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card">
+        <div className="flex items-center justify-between pb-3 border-b border-[#27303A] mb-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#E8EDF3] uppercase font-mono">
+            <Sliders className="w-4 h-4 text-[#6F95D6]" />
             <span>SIMULATE DEFENDER INTERVENTION</span>
           </div>
-          <span className="text-[10px] text-[#8B8D91]">
-            Intervention Point: <span className="font-bold text-[#17191C] dark:text-[#F7F5EE]">NOW</span>
+          <span className="text-xs text-[#9AA6B2] font-mono">
+            Intervention Point: <span className="font-bold text-[#6F95D6]">NOW</span>
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Action Selector */}
-          <div className="p-3 bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-lg">
-            <label className="text-[10px] text-[#8B8D91] uppercase font-bold block mb-2">
+          <div className="p-3.5 bg-[#11161D] border border-[#27303A] rounded-lg">
+            <label className="text-[10px] text-[#9AA6B2] uppercase font-bold block mb-2 font-mono">
               Select Intervention Action
             </label>
             <div className="space-y-2 text-xs">
-              <label className="flex items-center gap-2 p-2 bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#314B78] rounded cursor-pointer font-bold text-[#314B78] dark:text-[#9AB0D3]">
-                <input type="radio" name="action" defaultChecked className="accent-[#314B78]" />
+              <label className="flex items-center gap-2 p-2.5 bg-[#151B23] border border-[#6F95D6] rounded-lg cursor-pointer font-bold text-[#6F95D6]">
+                <input type="radio" name="action" defaultChecked className="accent-[#6F95D6]" />
                 <span>Isolate Host</span>
               </label>
-              <label className="flex items-center gap-2 p-2 bg-[#EFECE4] dark:bg-[#17191C]/40 border border-[#E5E1D8] dark:border-[#2B2E33] text-[#8B8D91] cursor-not-allowed">
+              <label className="flex items-center gap-2 p-2.5 bg-[#151B23]/50 border border-[#27303A] text-[#6C7987] cursor-not-allowed rounded-lg">
                 <input type="radio" name="action" disabled />
                 <span>Block Communication Path</span>
               </label>
-              <label className="flex items-center gap-2 p-2 bg-[#EFECE4] dark:bg-[#17191C]/40 border border-[#E5E1D8] dark:border-[#2B2E33] text-[#8B8D91] cursor-not-allowed">
+              <label className="flex items-center gap-2 p-2.5 bg-[#151B23]/50 border border-[#27303A] text-[#6C7987] cursor-not-allowed rounded-lg">
                 <input type="radio" name="action" disabled />
                 <span>Restrict Remote Service</span>
               </label>
@@ -147,54 +158,54 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
           </div>
 
           {/* Target Host Selector */}
-          <div className="p-3 bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-lg flex flex-col justify-between">
+          <div className="p-3.5 bg-[#11161D] border border-[#27303A] rounded-lg flex flex-col justify-between">
             <div>
-              <label className="text-[10px] text-[#8B8D91] uppercase font-bold block mb-2">
+              <label className="text-[10px] text-[#9AA6B2] uppercase font-bold block mb-2 font-mono">
                 Target Host Selection
               </label>
-              <div className="p-2.5 bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded text-xs">
-                <div className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{selectedHost}</div>
-                <div className="text-[10px] text-[#8B8D91] mt-0.5">IP: {simData.targetIp}</div>
+              <div className="p-2.5 bg-[#151B23] border border-[#27303A] rounded-lg text-xs space-y-1">
+                <div className="font-bold text-[#E8EDF3] font-mono">{selectedHost}</div>
+                <div className="text-xs text-[#9AA6B2] font-mono">IP: {simData.targetIp}</div>
               </div>
             </div>
-            <div className="text-[10px] text-[#9A4D48] font-bold bg-[#F9F2F1] dark:bg-[#2B1D1C] px-2 py-1 rounded border border-[#D9BEBC] dark:border-[#523331] mt-2">
+            <div className="text-[11px] text-[#B85C5C] font-mono font-bold bg-[#2B1D1C] px-2.5 py-1 rounded-lg border border-[#B85C5C]/30 mt-3">
               HIGH RISK ASSET AT RISK
             </div>
           </div>
 
           {/* Simulate Action Button */}
-          <div className="p-3 bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-lg flex flex-col justify-between">
+          <div className="p-3.5 bg-[#11161D] border border-[#27303A] rounded-lg flex flex-col justify-between">
             <div>
-              <label className="text-[10px] text-[#8B8D91] uppercase font-bold block mb-2">
+              <label className="text-[10px] text-[#9AA6B2] uppercase font-bold block mb-2 font-mono">
                 Modelled Simulation Trigger
               </label>
-              <p className="text-[11px] text-[#5F6268] dark:text-[#8B8D91] leading-snug">
+              <p className="text-xs text-[#9AA6B2] leading-relaxed">
                 Calculate counterfactual trajectory divergence under host isolation.
               </p>
             </div>
 
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={handleRunSimulation}
                 disabled={isSimulating}
-                className="flex-1 bg-[#17191C] hover:bg-[#2B2E33] text-[#FFFDF8] rounded-lg px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-subtle disabled:opacity-50 border border-transparent dark:border-[#3D4045]"
+                className="flex-1 bg-[#6F95D6] hover:bg-[#85A9E6] text-[#0B0F14] rounded-lg px-4 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50"
               >
                 {isSimulating ? (
                   <>
-                    <Activity className="w-4 h-4 animate-spin text-[#9AB0D3]" />
-                    <span>Calculating...</span>
+                    <Activity className="w-4 h-4 animate-spin text-[#0B0F14]" />
+                    <span>CALCULATING PROJECTION...</span>
                   </>
                 ) : (
                   <>
-                    <Play className="w-4 h-4 text-[#9AB0D3] fill-[#9AB0D3]" />
-                    <span>SIMULATE INTERVENTION</span>
+                    <Play className="w-4 h-4 text-[#0B0F14] fill-[#0B0F14]" />
+                    <span>SIMULATE HOST ISOLATION</span>
                   </>
                 )}
               </button>
               {isSimulated && (
                 <button
                   onClick={handleResetSimulation}
-                  className="px-3 py-2.5 bg-[#EFECE4] dark:bg-[#25282D] hover:bg-[#E5E1D8] text-[#17191C] dark:text-[#F7F5EE] rounded-lg text-xs font-semibold"
+                  className="px-3 py-2.5 bg-[#1E2632] hover:bg-[#27303A] text-[#E8EDF3] rounded-lg text-xs font-semibold transition-colors"
                   title="Reset Simulation"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -206,13 +217,13 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
       </div>
 
       {/* 3. HERO VISUAL — BEFORE VS AFTER TRAJECTORY COMPARISON */}
-      <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-5 shadow-card">
-        <div className="flex items-center justify-between pb-3 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-4">
+      <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card">
+        <div className="flex items-center justify-between pb-3 border-b border-[#27303A] mb-4">
           <div>
-            <h2 className="text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase tracking-wider">
+            <h2 className="text-xs font-bold text-[#E8EDF3] uppercase tracking-wider font-mono">
               PROJECTED TRAJECTORY DIVERGENCE: BASELINE VS INTERVENTION
             </h2>
-            <p className="text-[11px] text-[#8B8D91] mt-0.5">
+            <p className="text-xs text-[#9AA6B2] mt-0.5">
               Side-by-side comparison of baseline forecast vs. intervention-conditioned trajectory
             </p>
           </div>
@@ -225,10 +236,10 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* LEFT: WITHOUT INTERVENTION */}
-          <div className="p-4 bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] text-xs font-bold text-[#17191C] dark:text-[#F7F5EE]">
-              <span>WITHOUT INTERVENTION</span>
-              <span className="text-[#9A4D48] text-[10px] bg-[#F9F2F1] dark:bg-[#2B1D1C] px-2 py-0.5 rounded font-bold border border-[#D9BEBC]">
+          <div className="p-4 bg-[#11161D] border border-[#27303A] rounded-xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#27303A] text-xs font-bold text-[#E8EDF3]">
+              <span className="font-mono">WITHOUT INTERVENTION</span>
+              <span className="text-[#B85C5C] text-[10px] font-mono bg-[#2B1D1C] px-2 py-0.5 rounded font-bold border border-[#B85C5C]/40">
                 81% Risk Peak
               </span>
             </div>
@@ -239,16 +250,16 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
                   key={idx}
                   className={`p-2.5 rounded-lg border flex items-center justify-between ${
                     step.status === "OBSERVED"
-                      ? "bg-[#FFFDF8] dark:bg-[#1F2125] border-[#E5E1D8] dark:border-[#2B2E33] text-[#17191C] dark:text-[#F7F5EE]"
-                      : "bg-[#F0F4F9]/60 dark:bg-[#1E2633]/40 border-dashed border-[#657A9C] text-[#314B78] dark:text-[#9AB0D3]"
+                      ? "bg-[#151B23] border-[#27303A] text-[#E8EDF3]"
+                      : "bg-[#19202A] border-dashed border-[#6F95D6]/50 text-[#6F95D6]"
                   }`}
                 >
                   <div>
-                    <span className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{step.stage}</span>
-                    <span className="text-[10px] text-[#8B8D91] ml-2">({step.time})</span>
+                    <span className="font-semibold text-[#E8EDF3]">{step.stage}</span>
+                    <span className="text-[11px] font-mono text-[#9AA6B2] ml-2">({step.time})</span>
                   </div>
                   {step.probability && (
-                    <span className="font-bold text-[#314B78] dark:text-[#9AB0D3]">{step.probability}%</span>
+                    <span className="font-bold font-mono text-[#6F95D6]">{step.probability}%</span>
                   )}
                 </div>
               ))}
@@ -257,15 +268,15 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
 
           {/* RIGHT: WITH INTERVENTION */}
           <div
-            className={`p-4 rounded-xl border transition-all duration-500 space-y-3 ${
+            className={`p-4 rounded-xl border transition-all duration-300 space-y-3 ${
               isSimulated
-                ? "bg-[#F1F5F2] dark:bg-[#1C2620] border-2 border-[#557A62] shadow-card"
-                : "bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33]"
+                ? "bg-[#11161D] border-2 border-[#659477] shadow-card"
+                : "bg-[#11161D] border border-[#27303A]"
             }`}
           >
-            <div className="flex items-center justify-between pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] text-xs font-bold text-[#17191C] dark:text-[#F7F5EE]">
-              <span>WITH INTERVENTION</span>
-              <span className="text-[#557A62] dark:text-[#8BB098] text-[10px] bg-[#FFFDF8] dark:bg-[#17191C] border border-[#A5BDAC] px-2 py-0.5 rounded font-bold">
+            <div className="flex items-center justify-between pb-2 border-b border-[#27303A] text-xs font-bold text-[#E8EDF3]">
+              <span className="font-mono">WITH INTERVENTION</span>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${isSimulated ? "text-[#659477] bg-[#1C2620] border-[#659477]/40" : "text-[#9AA6B2] bg-[#151B23] border-[#27303A]"}`}>
                 {isSimulated ? "CONTAINED / REDUCED" : "Standing By"}
               </span>
             </div>
@@ -275,27 +286,27 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
                 simData.interventionTrajectory.map((step, idx) => (
                   <div
                     key={idx}
-                    className={`p-2.5 rounded-lg border flex items-center justify-between animate-fadeIn ${
+                    className={`p-2.5 rounded-lg border flex items-center justify-between ${
                       step.isInterventionPoint
-                        ? "bg-[#17191C] dark:bg-[#25282D] text-[#FFFDF8] border-[#17191C] font-bold"
+                        ? "bg-[#1E2632] text-[#E8EDF3] border-[#6F95D6] font-semibold"
                         : step.status === "CONTAINED"
-                        ? "bg-[#F1F5F2] dark:bg-[#1C2620] border-[#A5BDAC] text-[#557A62] dark:text-[#8BB098]"
-                        : "bg-[#FFFDF8] dark:bg-[#1F2125] border-[#E5E1D8] text-[#17191C]"
+                        ? "bg-[#1C2620] border-[#659477]/50 text-[#659477]"
+                        : "bg-[#151B23] border-[#27303A] text-[#E8EDF3]"
                     }`}
                   >
                     <div>
                       <span>{step.stage}</span>
-                      <span className="text-[10px] opacity-75 ml-2">({step.time})</span>
+                      <span className="text-[11px] font-mono text-[#9AA6B2] ml-2">({step.time})</span>
                     </div>
                     {step.probability && (
-                      <span className="font-bold text-[#557A62] dark:text-[#8BB098]">{step.probability}%</span>
+                      <span className="font-bold font-mono text-[#659477]">{step.probability}%</span>
                     )}
                   </div>
                 ))
               ) : (
-                <div className="py-16 text-center text-[#8B8D91] text-xs flex flex-col items-center justify-center">
-                  <Zap className="w-6 h-6 text-[#8B8D91] mb-2" />
-                  <span>Click "SIMULATE INTERVENTION" to project counterfactual path</span>
+                <div className="py-12 text-center text-[#9AA6B2] text-xs flex flex-col items-center justify-center space-y-2">
+                  <Zap className="w-6 h-6 text-[#6C7987]" />
+                  <span>Click "SIMULATE HOST ISOLATION" to project counterfactual path</span>
                 </div>
               )}
             </div>
@@ -306,34 +317,34 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
       {/* 4. TOPOLOGY BEFORE / AFTER VISUAL COMPARISON */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Baseline Topology */}
-        <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-4 shadow-subtle">
-          <div className="text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-3">
+        <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-4 shadow-subtle">
+          <div className="text-xs font-bold font-mono text-[#E8EDF3] uppercase pb-2 border-b border-[#27303A] mb-3">
             CURRENT TOPOLOGY (BASELINE)
           </div>
-          <div className="p-3 bg-[#FBFAF6] dark:bg-[#17191C] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-lg text-xs space-y-2">
+          <div className="p-3 bg-[#11161D] border border-[#27303A] rounded-lg text-xs space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{selectedHost}</span>
-              <span className="text-[#9A4D48] text-[10px] font-bold bg-[#F9F2F1] px-1.5 py-0.5 rounded border border-[#D9BEBC]">CONNECTED</span>
+              <span className="font-bold font-mono text-[#E8EDF3]">{selectedHost}</span>
+              <span className="text-[#B85C5C] font-mono text-[10px] font-bold bg-[#2B1D1C] px-1.5 py-0.5 rounded border border-[#B85C5C]/40">CONNECTED</span>
             </div>
-            <div className="text-[11px] text-[#5F6268] dark:text-[#8B8D91]">
+            <div className="text-xs text-[#9AA6B2]">
               Active communication edges to Workstation-302, DB-CLUSTER-01, and External C2.
             </div>
           </div>
         </div>
 
         {/* Intervention Topology */}
-        <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-4 shadow-subtle">
-          <div className="text-xs font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase pb-2 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-3">
+        <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-4 shadow-subtle">
+          <div className="text-xs font-bold font-mono text-[#E8EDF3] uppercase pb-2 border-b border-[#27303A] mb-3">
             SIMULATED INTERVENTION TOPOLOGY
           </div>
-          <div className={`p-3 rounded-lg text-xs space-y-2 border ${isSimulated ? "bg-[#F1F5F2] dark:bg-[#1C2620] border-[#A5BDAC]" : "bg-[#FBFAF6] dark:bg-[#17191C] border-[#E5E1D8]"}`}>
+          <div className={`p-3 rounded-lg text-xs space-y-2 border ${isSimulated ? "bg-[#1C2620] border-[#659477]/40" : "bg-[#11161D] border-[#27303A]"}`}>
             <div className="flex items-center justify-between">
-              <span className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{selectedHost}</span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isSimulated ? "bg-[#FFFDF8] text-[#557A62] border border-[#A5BDAC]" : "bg-[#EFECE4] text-[#5F6268]"}`}>
+              <span className="font-bold font-mono text-[#E8EDF3]">{selectedHost}</span>
+              <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${isSimulated ? "bg-[#1C2620] text-[#659477] border border-[#659477]/40" : "bg-[#19202A] text-[#9AA6B2]"}`}>
                 {isSimulated ? "MODELLED ISOLATED [X]" : "PENDING SIMULATION"}
               </span>
             </div>
-            <div className="text-[11px] text-[#5F6268] dark:text-[#8B8D91]">
+            <div className="text-xs text-[#9AA6B2]">
               {isSimulated
                 ? "Modelled intervention drops projected communication edges to internal servers."
                 : "Run simulation to visualize isolated edge topology."}
@@ -344,23 +355,23 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
 
       {/* 5. RISK PROBABILITY DIVERGENCE COMPARISON */}
       {isSimulated && (
-        <div className="bg-[#FFFDF8] dark:bg-[#1F2125] border border-[#E5E1D8] dark:border-[#2B2E33] rounded-xl p-5 shadow-card text-xs">
-          <div className="font-bold text-[#17191C] dark:text-[#F7F5EE] uppercase pb-3 border-b border-[#E5E1D8] dark:border-[#2B2E33] mb-3">
+        <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card text-xs">
+          <div className="font-bold text-[#E8EDF3] uppercase pb-3 border-b border-[#27303A] mb-3 font-mono">
             MODELLED PROJECTION: PROBABILITY DIVERGENCE COMPARISON
           </div>
 
           <div className="space-y-3">
             {simData.riskComparison.map((item) => (
-              <div key={item.stage} className="space-y-1">
-                <div className="flex justify-between text-[11px]">
-                  <span className="font-bold text-[#17191C] dark:text-[#F7F5EE]">{item.stage}</span>
+              <div key={item.stage} className="space-y-1.5">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="font-semibold text-[#E8EDF3]">{item.stage}</span>
                   <span>
-                    Baseline: <span className="font-bold text-[#9A4D48]">{item.baselineProb}%</span> → Modelled Intervention: <span className="font-bold text-[#557A62]">{item.interventionProb}%</span>
+                    Baseline: <span className="font-bold text-[#B85C5C]">{item.baselineProb}%</span> → Modelled Intervention: <span className="font-bold text-[#659477]">{item.interventionProb}%</span>
                   </span>
                 </div>
-                <div className="w-full bg-[#EFECE4] dark:bg-[#25282D] h-2.5 rounded-full overflow-hidden flex">
-                  <div className="bg-[#9A4D48] h-full" style={{ width: `${item.baselineProb}%` }} />
-                  <div className="bg-[#557A62] h-full" style={{ width: `${item.interventionProb}%` }} />
+                <div className="w-full bg-[#11161D] h-2.5 rounded-full overflow-hidden flex border border-[#27303A]">
+                  <div className="bg-[#B85C5C] h-full" style={{ width: `${item.baselineProb}%` }} />
+                  <div className="bg-[#659477] h-full" style={{ width: `${item.interventionProb}%` }} />
                 </div>
               </div>
             ))}
@@ -369,7 +380,7 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
       )}
 
       {/* Concise Disclaimer Footer */}
-      <div className="p-3 bg-[#EFECE4] dark:bg-[#17191C] rounded-lg border border-[#E5E1D8] dark:border-[#2B2E33] text-center text-xs text-[#5F6268] dark:text-[#8B8D91]">
+      <div className="p-3 bg-[#11161D] rounded-lg border border-[#27303A] text-center text-xs text-[#9AA6B2]">
         Intervention changes the modelled future state trajectory. Decision Support Mode only.
       </div>
     </div>
@@ -389,7 +400,7 @@ export default function WhatIfPage() {
               />
               <Link
                 href="/scenarios"
-                className="px-5 py-2.5 rounded bg-[#6F8FBE] hover:bg-[#879DBF] text-[#0D1015] font-mono text-xs font-bold transition-colors inline-flex items-center gap-2"
+                className="px-5 py-2.5 rounded-lg bg-[#6F95D6] hover:bg-[#85A9E6] text-[#0B0F14] font-mono text-xs font-bold transition-colors inline-flex items-center gap-2"
               >
                 <span>OPEN SCENARIO LIBRARY</span>
               </Link>
@@ -397,7 +408,7 @@ export default function WhatIfPage() {
           );
         }
         return (
-          <React.Suspense fallback={<div className="p-8 font-mono text-xs text-[#9BA4B0]">Loading simulation engine...</div>}>
+          <React.Suspense fallback={<div className="p-8 font-mono text-xs text-[#9AA6B2]">Loading simulation engine...</div>}>
             <WhatIfSimulatorContent
               activeScenario={activeScenario}
               setActiveScenarioId={setActiveScenarioId}
@@ -408,4 +419,3 @@ export default function WhatIfPage() {
     </AppShell>
   );
 }
-

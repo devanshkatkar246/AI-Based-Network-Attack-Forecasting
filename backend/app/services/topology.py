@@ -15,6 +15,8 @@ class TopologyService:
         host_new_edges: Dict[str, int] = {}
         edge_labels: Dict[Tuple[str, str], str] = {}
         edge_protocols: Dict[Tuple[str, str], Set[str]] = {}
+        active_sources: Set[str] = set()
+        active_targets: Set[str] = set()
         
         current_edges: Set[Tuple[str, str]] = set()
 
@@ -23,6 +25,9 @@ class TopologyService:
             dst = r.dst_ip
             G.add_node(src)
             G.add_node(dst)
+
+            active_sources.add(src)
+            active_targets.add(dst)
 
             edge = (src, dst)
             current_edges.add(edge)
@@ -54,28 +59,49 @@ class TopologyService:
 
         # Build nodes
         nodes: List[TopologyNode] = []
-        for idx, node_ip in enumerate(sorted(G.nodes())):
-            # Assign zone based on IP structure
+        sorted_nodes = sorted(G.nodes())
+        total_nodes = len(sorted_nodes)
+
+        for idx, node_ip in enumerate(sorted_nodes):
             zone_id = "INTERNAL"
-            if node_ip.startswith("198.51") or node_ip.startswith("203.0"):
+            if node_ip.startswith("198.51") or node_ip.startswith("203.0") or not (node_ip.startswith("10.") or node_ip.startswith("172.") or node_ip.startswith("192.168.")):
                 zone_id = "EXTERNAL"
             elif ".1." in node_ip or ".4." in node_ip:
                 zone_id = "SERVERS"
 
-            # Assign coordinates for neat rendering
-            x = 100 + (idx % 4) * 160
-            y = 120 + (idx // 4) * 100
+            # Compute clean spatial positioning
+            if zone_id == "EXTERNAL":
+                x = 680
+            elif zone_id == "SERVERS":
+                x = 420
+            else:
+                x = 160
+
+            # Stagger Y coordinates cleanly
+            y = 80 + (idx * 50) % 180
 
             node_type = "gateway" if "1" in node_ip.split(".")[-1] else "host"
             if zone_id == "EXTERNAL":
                 node_type = "external"
+            elif zone_id == "SERVERS":
+                node_type = "server"
+
+            # Determine node status
+            if zone_id == "EXTERNAL":
+                node_status = "external"
+            elif node_ip in active_sources:
+                node_status = "compromised"
+            elif node_ip in active_targets:
+                node_status = "targeted"
+            else:
+                node_status = "clean"
 
             nodes.append(TopologyNode(
                 id=f"node-{node_ip.replace('.', '_')}",
                 label=f"Host-{node_ip}",
                 type=node_type,
                 ip=node_ip,
-                status="clean",
+                status=node_status,
                 zone=zone_id,
                 x=x,
                 y=y,
@@ -88,7 +114,7 @@ class TopologyService:
         for (src, dst) in G.edges():
             edge_tuple = (src, dst)
             is_new = edge_tuple in new_edges
-            status = "FORECAST" if is_new else "OBSERVED"
+            status = "CURRENT" if (is_new or len(records) > 0) else "OBSERVED"
             edges.append(TopologyEdge(
                 source=f"node-{src.replace('.', '_')}",
                 target=f"node-{dst.replace('.', '_')}",
@@ -98,10 +124,11 @@ class TopologyService:
             ))
 
         zones = [
-            TopologyZone(id="z-internal", label="INTERNAL SUBNET", color="bg-slate-100/50 border-slate-200"),
-            TopologyZone(id="z-servers", label="PRODUCTION SERVERS", color="bg-blue-50/40 border-blue-200/50"),
-            TopologyZone(id="z-external", label="EXTERNAL NETWORKS", color="bg-red-50/30 border-red-200/40")
+            TopologyZone(id="z-internal", label="INTERNAL SUBNET", color="bg-[#10141A] border-[#2A323D]"),
+            TopologyZone(id="z-servers", label="PRODUCTION SERVERS", color="bg-[#10141A] border-[#2A323D]"),
+            TopologyZone(id="z-external", label="EXTERNAL NETWORKS", color="bg-[#10141A] border-[#2A323D]")
         ]
 
         state = TopologyState(zones=zones, nodes=nodes, edges=edges)
         return state, current_edges, len(new_edges)
+
