@@ -5,21 +5,21 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# Ensure backend root is on Python path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Ensure backend directory and project root are on Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+for p in [current_dir, project_root]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
-from app.api.v1 import (
-    health,
-    scenarios,
-    network,
-    forecast,
-    explanation,
-    attack,
-    what_if,
-    topology,
-    trajectory,
-    evidence,
-    reports
+from routers import (
+    health_router,
+    scenarios_router,
+    forecast_router,
+    topology_router,
+    evidence_router,
+    reports_router,
+    what_if_router
 )
 
 app = FastAPI(
@@ -81,27 +81,19 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Register routers under /api (Canonical Vercel Service standard)
-app.include_router(health.router, prefix="/api", tags=["Health"])
-app.include_router(scenarios.router, prefix="/api", tags=["Scenarios"])
-app.include_router(forecast.router, prefix="/api", tags=["Forecast"])
-app.include_router(network.router, prefix="/api", tags=["Network"])
-app.include_router(topology.router, prefix="/api", tags=["Topology"])
-app.include_router(trajectory.router, prefix="/api", tags=["Trajectory"])
-app.include_router(evidence.router, prefix="/api", tags=["Evidence"])
-app.include_router(what_if.router, prefix="/api", tags=["What-If"])
-app.include_router(reports.router, prefix="/api", tags=["Reports"])
-app.include_router(explanation.router, prefix="/api", tags=["Explanation"])
-app.include_router(attack.router, prefix="/api", tags=["ATT&CK"])
+app.include_router(health_router, prefix="/api", tags=["Health"])
+app.include_router(scenarios_router, prefix="/api", tags=["Scenarios"])
+app.include_router(forecast_router, prefix="/api", tags=["Forecast"])
+app.include_router(topology_router, prefix="/api", tags=["Topology"])
+app.include_router(evidence_router, prefix="/api", tags=["Evidence"])
+app.include_router(what_if_router, prefix="/api", tags=["What-If"])
+app.include_router(reports_router, prefix="/api", tags=["Reports"])
 
 # Register routers under /api/v1 (Backward compatibility)
-app.include_router(health.router, prefix="/api/v1", tags=["Health v1"])
-app.include_router(scenarios.router, prefix="/api/v1", tags=["Scenarios v1"])
-app.include_router(forecast.router, prefix="/api/v1", tags=["Forecast v1"])
-app.include_router(network.router, prefix="/api/v1", tags=["Network v1"])
-app.include_router(topology.router, prefix="/api/v1", tags=["Topology v1"])
-app.include_router(trajectory.router, prefix="/api/v1", tags=["Trajectory v1"])
-app.include_router(evidence.router, prefix="/api/v1", tags=["Evidence v1"])
-app.include_router(what_if.router, prefix="/api/v1", tags=["What-If v1"])
-app.include_router(reports.router, prefix="/api/v1", tags=["Reports v1"])
-app.include_router(explanation.router, prefix="/api/v1", tags=["Explanation v1"])
-app.include_router(attack.router, prefix="/api/v1", tags=["ATT&CK v1"])
+app.include_router(health_router, prefix="/api/v1", tags=["Health v1"])
+app.include_router(scenarios_router, prefix="/api/v1", tags=["Scenarios v1"])
+app.include_router(forecast_router, prefix="/api/v1", tags=["Forecast v1"])
+app.include_router(topology_router, prefix="/api/v1", tags=["Topology v1"])
+app.include_router(evidence_router, prefix="/api/v1", tags=["Evidence v1"])
+app.include_router(what_if_router, prefix="/api/v1", tags=["What-If v1"])
+app.include_router(reports_router, prefix="/api/v1", tags=["Reports v1"])

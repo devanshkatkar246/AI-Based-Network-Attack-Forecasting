@@ -387,7 +387,7 @@ function WhatIfSimulatorContent({ activeScenario, setActiveScenarioId }) {
   );
 }
 
-export default function WhatIfPage() {
+function WhatIfPageContent() {
   return (
     <AppShell title="WHAT-IF INTERVENTION SIMULATION">
       {({ activeScenario, activeScenarioId, setActiveScenarioId }) => {
@@ -408,14 +408,21 @@ export default function WhatIfPage() {
           );
         }
         return (
-          <React.Suspense fallback={<div className="p-8 font-mono text-xs text-[#9AA6B2]">Loading simulation engine...</div>}>
-            <WhatIfSimulatorContent
-              activeScenario={activeScenario}
-              setActiveScenarioId={setActiveScenarioId}
-            />
-          </React.Suspense>
+          <WhatIfSimulatorContent
+            activeScenario={activeScenario}
+            setActiveScenarioId={setActiveScenarioId}
+          />
         );
       }}
     </AppShell>
   );
 }
+
+export default function WhatIfPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-[#0B0F14] p-8 text-xs font-mono text-[#9AA6B2]">Loading simulation...</div>}>
+      <WhatIfPageContent />
+    </React.Suspense>
+  );
+}
+
