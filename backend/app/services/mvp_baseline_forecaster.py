@@ -79,7 +79,6 @@ class MVPBaselineForecaster(ForecastEngine):
             norm_p = BehaviorTaxonomyService.normalize_behavior(st.phase)
             tech = self.attack_mapper.map_behavior_to_technique(norm_p.value)
             
-            # Format clean relative timestamp T-(N*10)s
             t_sec = int((len(state_history) - 1 - idx) * self.window_size_seconds)
             t_str = f"T-{t_sec}s"
 
@@ -91,11 +90,17 @@ class MVPBaselineForecaster(ForecastEngine):
                 status="OBSERVED",
                 semanticState="observed",
                 timestamp=st.timestamp,
+                relativeTimeSeconds=float(-t_sec),
+                relativeTimeDisplay=t_str,
                 estimatedTime=t_str,
                 sourceHost=src_host_str,
                 targetHost="Monitored Subnet",
+                sourceAsset=src_host_str,
+                targetAsset="Monitored Subnet",
                 details=f"Empirically observed traffic window {t_str}",
+                description=f"Empirically observed traffic window {t_str}",
                 confidence=1.0,
+                isForecast=False,
                 isCurrent=False
             ))
 
@@ -109,16 +114,21 @@ class MVPBaselineForecaster(ForecastEngine):
             status="CURRENT",
             semanticState="current",
             timestamp=current_state.timestamp,
+            relativeTimeSeconds=0.0,
+            relativeTimeDisplay="NOW",
             estimatedTime="NOW",
             sourceHost=src_host_str,
             targetHost=dst_host_str,
+            sourceAsset=src_host_str,
+            targetAsset=dst_host_str,
             details=f"Active state in current window (Window ID #{current_state.window_id})",
+            description=f"Active state in current window (Window ID #{current_state.window_id})",
             confidence=0.98,
+            isForecast=False,
             isCurrent=True
         ))
 
         # 3. Predict Next Behavior Rollout across Configurable Horizons
-        # Transition probabilities derived from current state + temporal deltas
         if current_norm_phase in [BehaviorTaxonomy.BENIGN, BehaviorTaxonomy.RECONNAISSANCE]:
             next_phase_h1 = BehaviorTaxonomy.DISCOVERY
             next_phase_h2 = BehaviorTaxonomy.CREDENTIAL_ACCESS
@@ -147,7 +157,6 @@ class MVPBaselineForecaster(ForecastEngine):
             pred_phase = rollout_phases[k]
             tech = self.attack_mapper.map_behavior_to_technique(pred_phase.value)
             
-            # Base probability calculated from feature deltas
             score_base = 0.65 + min(0.30, (delta_edges * 0.05) + (delta_dest_div * 0.03) + (east_west_bytes / 50000.0))
             prob_val = round(max(0.50, min(0.95, score_base - (k * 0.08))), 2)
 
@@ -164,13 +173,20 @@ class MVPBaselineForecaster(ForecastEngine):
                 stage=pred_phase.value.title(),
                 techniqueId=tech.technique_id if tech else None,
                 techniqueName=tech.technique_name if tech else "Modelled Transition",
-                status="PENDING",
+                status="FORECAST",
                 semanticState="forecast",
+                timestamp=None,
+                relativeTimeSeconds=float(h_sec),
+                relativeTimeDisplay=f"+{h_sec}s",
                 estimatedTime=f"+{h_sec}s",
                 sourceHost=src_host_str,
                 targetHost=dst_host_str,
+                sourceAsset=src_host_str,
+                targetAsset=dst_host_str,
                 details=f"MVP Temporal baseline rollout prediction (+{h_sec}s, prob={round(prob_val*100)}%)",
+                description=f"MVP Temporal baseline rollout prediction (+{h_sec}s, prob={round(prob_val*100)}%)",
                 confidence=prob_val,
+                isForecast=True,
                 isCurrent=False
             ))
 
@@ -181,9 +197,12 @@ class MVPBaselineForecaster(ForecastEngine):
         warning_data = WarningLeadTimeEngine.calculate_lead_time(
             forecast_timestamp_str=current_state.timestamp,
             predicted_behavior=predictions[0]["behavior"],
+            predictions=predictions,
             future_state_history=future_state_history or [],
             window_size_seconds=self.window_size_seconds,
-            ground_truth_onset=ground_truth_onset
+            ground_truth_onset=ground_truth_onset,
+            current_phase=current_state.phase,
+            target_asset=dst_host_str
         )
 
         warning_lead_sec = warning_data.get("lead_time_seconds") if warning_data.get("available") else None
@@ -192,8 +211,8 @@ class MVPBaselineForecaster(ForecastEngine):
             status="success",
             engine_id="MVP Baseline Forecaster",
             current_behavior=current_norm_phase.value,
-            predicted_behavior=predictions[0]["behavior"],
-            predicted_technique=predictions[0]["technique_id"],
+            predicted_behavior=warning_data.get("predicted_behavior") or predictions[0]["behavior"],
+            predicted_technique=warning_data.get("predicted_technique") or predictions[0]["technique_id"],
             forecast_horizon_seconds=predictions[0]["horizon_seconds"],
             warning_lead_time_seconds=warning_lead_sec,
             target_host=dst_host_str,
@@ -201,3 +220,4 @@ class MVPBaselineForecaster(ForecastEngine):
             evidence=evidence,
             uncertainty={"calibrated_confidence": predictions[0]["probability"], "method": "MVP Temporal Rule Rollout"}
         )
+

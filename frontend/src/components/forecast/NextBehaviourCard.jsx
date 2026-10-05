@@ -8,20 +8,19 @@ export default function NextBehaviourCard({
   selectedHorizon,
   onSelectHorizon,
 }) {
-  const normHorizon = selectedHorizon
-    ? selectedHorizon.startsWith("+") ? selectedHorizon : `+${selectedHorizon}`
-    : "+30s";
+  const cleanSelected = selectedHorizon ? selectedHorizon.replace("+", "") : "";
+  const normHorizon = cleanSelected ? `+${cleanSelected}` : (horizonData?.[0]?.horizon || "+10s");
 
   const activeItem =
-    horizonData?.find((h) => h.horizon === normHorizon) ||
+    horizonData?.find((h) => h.horizon === normHorizon || h.horizon.replace("+", "") === cleanSelected) ||
     horizonData?.[0] || {
-      horizon: "+30s",
+      horizon: "+10s",
       probability: null,
       label: "Forecast Horizon",
       stage: "Modelled Transition",
       technique: "MITRE Attack Transition",
       targetAsset: "Monitored Subnet",
-      warningSec: 30,
+      warningSec: 10,
     };
 
   return (

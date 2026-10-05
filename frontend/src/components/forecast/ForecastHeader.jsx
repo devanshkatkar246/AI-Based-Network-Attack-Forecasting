@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import StatusBadge from "../StatusBadge";
 
 export default function ForecastHeader({
@@ -8,7 +8,21 @@ export default function ForecastHeader({
   selectedHorizon,
   onSelectHorizon,
 }) {
-  const horizons = ["30s", "60s", "90s"];
+  const dynamicHorizons = activeScenario?.horizonData?.length > 0
+    ? activeScenario.horizonData.map((h) => h.horizon.replace("+", ""))
+    : ["10s", "20s", "30s"];
+
+  // Ensure selectedHorizon matches one of the available horizons
+  useEffect(() => {
+    if (dynamicHorizons.length > 0) {
+      const cleanSelected = selectedHorizon?.replace("+", "");
+      if (!cleanSelected || !dynamicHorizons.includes(cleanSelected)) {
+        onSelectHorizon(dynamicHorizons[0]);
+      }
+    }
+  }, [dynamicHorizons, selectedHorizon, onSelectHorizon]);
+
+  const cleanSelected = selectedHorizon?.replace("+", "");
 
   return (
     <div className="bg-[#151A21] border border-[#2A323D] rounded-xl p-4 shadow-card mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 font-mono select-none">
@@ -25,13 +39,13 @@ export default function ForecastHeader({
         </p>
       </div>
 
-      {/* Right: Horizon Control */}
+      {/* Right: Dynamic Horizon Control */}
       <div className="flex items-center gap-1.5 bg-[#10141A] border border-[#2A323D] rounded-lg p-1 text-xs">
         <span className="text-[10px] text-[#737D89] font-semibold px-2 uppercase tracking-wide">
           Forecast Horizon:
         </span>
-        {horizons.map((h) => {
-          const isSelected = selectedHorizon === h;
+        {dynamicHorizons.map((h) => {
+          const isSelected = cleanSelected === h;
           return (
             <button
               key={h}
@@ -50,6 +64,3 @@ export default function ForecastHeader({
     </div>
   );
 }
-
-
-

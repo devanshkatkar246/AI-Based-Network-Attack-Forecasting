@@ -31,6 +31,7 @@ wheels/
 .installed.cfg
 *.egg
 !src/lib/
+!frontend/src/lib/
 
 
 # Testing & Coverage
@@ -44,8 +45,11 @@ coverage/
 
 # Next.js & Build Artifacts
 .next/
+frontend/.next/
 out/
+frontend/out/
 build/
+frontend/build/
 .vercel/
 *.tsbuildinfo
 next-env.d.ts

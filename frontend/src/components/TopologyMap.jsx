@@ -1,28 +1,22 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Server, Shield, Database, Radio, Globe, Activity, RefreshCw, Info, Target, AlertTriangle } from "lucide-react";
+import { Server, Shield, Database, Radio, Globe, Activity, RefreshCw, Target, AlertTriangle } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
 export default function TopologyMap({ topology, onSelectHost }) {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  const nodeIconMap = {
-    gateway: Globe,
-    dc: Shield,
-    host: Server,
-    server: Server,
-    db: Database,
-    external: Radio
-  };
+  const rawEdges = topology?.edges || [];
+  const attackVectors = topology?.attackMovementEdges || [];
 
   // Helper to flexibly match node by id, ip, or label
-  const findNode = (rawId) => {
-    if (!rawId || !topology?.nodes) return null;
+  const findNode = (rawId, nodesList = []) => {
+    if (!rawId || !nodesList) return null;
     const targetStr = rawId.toString().trim();
     const cleanIp = targetStr.replace(/^node-/, "").replace(/_/g, ".");
-    return topology.nodes.find((n) => {
+    return nodesList.find((n) => {
       if (!n) return false;
       if (n.id === targetStr || n.ip === targetStr || n.label === targetStr) return true;
       if (n.ip === cleanIp) return true;
@@ -31,24 +25,42 @@ export default function TopologyMap({ topology, onSelectHost }) {
     });
   };
 
-  // Deterministic DAG / Hierarchical Layout Engine
+  // Canvas Dimensions
   const canvasWidth = 960;
-  const canvasHeight = 480;
+  const canvasHeight = 440;
 
   const positionedNodes = useMemo(() => {
     if (!topology || !topology.nodes || !Array.isArray(topology.nodes) || topology.nodes.length === 0) {
       return [];
     }
 
-    // 1. Group nodes into functional network tiers
+    const nodes = topology.nodes;
+    const totalCount = nodes.length;
+
+    // Optimal layout for 2 to 3 nodes (Source -> Target horizontal flow)
+    if (totalCount <= 3) {
+      const stepX = (canvasWidth - 360) / Math.max(1, totalCount - 1);
+      return nodes.map((node, idx) => {
+        const x = totalCount === 1 ? canvasWidth / 2 : 180 + idx * stepX;
+        const y = canvasHeight / 2;
+        return {
+          ...node,
+          x,
+          y,
+          tier: idx
+        };
+      });
+    }
+
+    // Tiered DAG layout for 4+ nodes
     const tiers = {
-      0: [], // Ingress / Gateway / Perimeter
-      1: [], // Workstations / Internal Monitored Hosts
+      0: [], // Ingress / Perimeter
+      1: [], // Workstations / Compromised Source
       2: [], // Internal Servers / DC / Targets
-      3: []  // Egress / External Targets
+      3: []  // Egress / External
     };
 
-    topology.nodes.forEach((node) => {
+    nodes.forEach((node) => {
       const type = (node.type || "host").toLowerCase();
       const status = (node.status || "clean").toLowerCase();
 
@@ -63,9 +75,8 @@ export default function TopologyMap({ topology, onSelectHost }) {
       }
     });
 
-    // Fallback if a tier is empty: balance nodes across tiers
     const tierKeys = [0, 1, 2, 3];
-    const xPositions = [120, 350, 600, 830];
+    const xPositions = [140, 370, 610, 830];
 
     const result = [];
     tierKeys.forEach((tIdx) => {
@@ -74,8 +85,8 @@ export default function TopologyMap({ topology, onSelectHost }) {
       if (count === 0) return;
 
       const x = xPositions[tIdx];
-      const startY = 80;
-      const availableHeight = canvasHeight - 140;
+      const startY = 90;
+      const availableHeight = canvasHeight - 160;
       const stepY = count > 1 ? availableHeight / (count - 1) : 0;
 
       nodeList.forEach((node, nIdx) => {
@@ -127,6 +138,8 @@ export default function TopologyMap({ topology, onSelectHost }) {
     );
   }
 
+  const hasEdges = rawEdges.length > 0 || attackVectors.length > 0;
+
   return (
     <div className="w-full bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card select-none flex flex-col justify-between" style={{ minHeight: "560px" }}>
       {/* 1. Header Bar & Legend */}
@@ -138,8 +151,8 @@ export default function TopologyMap({ topology, onSelectHost }) {
             </h2>
             <StatusBadge status="NETWORK TOPOLOGY" size="sm" customLabel="NETWORK PATH" />
           </div>
-          <p className="text-[11px] text-[#9BA4B0] mt-0.5">
-            Physical Hosts & Communication Edges • Observed, Current, & Forecast Vectors
+          <p className="text-[11px] text-[#9AA6B2] mt-0.5">
+            Physical Hosts & Directional Movement • Observed, Current, & Forecast Attack Vectors
           </p>
         </div>
 
@@ -151,7 +164,7 @@ export default function TopologyMap({ topology, onSelectHost }) {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#6F8FBE]" />
-            <span className="text-[#6F8FBE] font-bold">TARGETED</span>
+            <span className="text-[#6F8FBE] font-bold">CURRENT TARGET</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full border border-dashed border-[#718CB8] bg-transparent" />
@@ -164,39 +177,43 @@ export default function TopologyMap({ topology, onSelectHost }) {
         </div>
       </div>
 
-      {/* 2. Controls & Canvas Bar */}
+      {/* 2. Honest Telemetry Counters Bar */}
       <div className="flex items-center justify-between bg-[#0D1015] border border-[#2A323C] rounded-lg px-4 py-2 mb-3 text-xs">
-        <div className="flex items-center gap-2 text-[#9BA4B0]">
-          <Activity className="w-3.5 h-3.5 text-[#6F8FBE]" />
-          <span>
-            MONITORED HOSTS: <strong className="text-[#E7EAF0]">{topology.nodes.length}</strong>
-          </span>
+        <div className="flex items-center gap-3 text-[#9AA6B2] flex-wrap font-mono">
+          <div className="flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5 text-[#6F8FBE]" />
+            <span>MONITORED HOSTS: <strong className="text-[#E7EAF0]">{topology.nodes.length}</strong></span>
+          </div>
           <span className="text-[#2A323C]">|</span>
-          <span>
-            COMMUNICATION EDGES: <strong className="text-[#E7EAF0]">{topology.edges?.length || 0}</strong>
-          </span>
+          <div>
+            <span>COMMUNICATION EDGES: <strong className="text-[#E7EAF0]">{rawEdges.length}</strong></span>
+          </div>
+          <span className="text-[#2A323C]">|</span>
+          <div>
+            <span>ATTACK MOVEMENT VECTORS: <strong className="text-[#6F8FBE]">{attackVectors.length}</strong></span>
+          </div>
         </div>
 
         <button
           onClick={handleResetView}
-          className="px-2.5 py-1 rounded bg-[#191F27] hover:bg-[#2A323C] text-[#9BA4B0] hover:text-[#E7EAF0] text-[11px] transition-colors flex items-center gap-1"
+          className="px-2.5 py-1 rounded bg-[#191F27] hover:bg-[#2A323C] text-[#9AA6B2] hover:text-[#E7EAF0] text-[11px] transition-colors flex items-center gap-1 font-mono"
         >
           <RefreshCw className="w-3 h-3" />
           <span>FIT VIEW</span>
         </button>
       </div>
 
-      {/* 3. Full-Width Interactive SVG Network Canvas */}
+      {/* 3. Interactive SVG Canvas */}
       <div className="relative w-full overflow-hidden rounded-lg bg-[#0D1015] border border-[#2A323C] p-2">
-        {(!topology.edges || topology.edges.length === 0) && (
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 bg-[#191F27] border border-[#2A323C] rounded text-[11px] text-[#9BA4B0]">
-            No communication edges observed in the current analysis window.
+        {!hasEdges && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 bg-[#191F27] border border-[#2A323C] rounded text-[11px] text-[#9AA6B2] font-mono">
+            No communication edges or attack vectors observed in the current window.
           </div>
         )}
 
         <svg
           viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-          className="w-full h-auto min-h-[420px] max-h-[520px] transition-transform duration-200"
+          className="w-full h-auto min-h-[380px] max-h-[460px] transition-transform duration-200"
           style={{ transform: `scale(${zoomLevel})` }}
         >
           <defs>
@@ -218,61 +235,82 @@ export default function TopologyMap({ topology, onSelectHost }) {
             </filter>
           </defs>
 
-          {/* Network Subnet Zone Guides */}
-          <g opacity="0.4">
-            <rect x="30" y="20" width="180" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
-            <text x="40" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">PERIMETER / GATEWAY</text>
+          {/* Subnet Zone Guides */}
+          <g opacity="0.35">
+            <rect x="30" y="20" width="200" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
+            <text x="40" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">SOURCE / COMPROMISED</text>
 
-            <rect x="240" y="20" width="220" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
-            <text x="250" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">INTERNAL WORKSTATIONS</text>
+            <rect x="260" y="20" width="410" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
+            <text x="270" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">INTERNAL LATERAL SUBNET</text>
 
-            <rect x="490" y="20" width="220" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
-            <text x="500" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">PRODUCTION SERVERS & DC</text>
-
-            <rect x="730" y="20" width="200" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
-            <text x="740" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">PROJECTED TARGET / EGRESS</text>
+            <rect x="700" y="20" width="230" height={canvasHeight - 40} rx="8" fill="#151A21" stroke="#2A323C" strokeDasharray="3,3" />
+            <text x="710" y="38" fill="#9BA4B0" fontSize="9" fontWeight="bold" fontFamily="monospace">PROJECTED TARGET / EGRESS</text>
           </g>
 
-          {/* SVG Communication Edges (Cubic Bezier Curves) */}
-          {topology.edges && topology.edges.map((edge, idx) => {
-            const sNode = positionedNodeMap.get(edge.source) || findNode(edge.source);
-            const tNode = positionedNodeMap.get(edge.target) || findNode(edge.target);
+          {/* Raw Observed Flow Communication Edges */}
+          {rawEdges.map((edge, idx) => {
+            const sNode = positionedNodeMap.get(edge.source) || findNode(edge.source, positionedNodes);
+            const tNode = positionedNodeMap.get(edge.target) || findNode(edge.target, positionedNodes);
             if (!sNode || !tNode) return null;
 
-            const isForecast = edge.status === "FORECAST" || edge.type === "forecast";
-            const isActual = edge.status === "ACTUAL";
-            const isCurrent = edge.status === "CURRENT" || edge.type === "suspicious";
+            const dx = tNode.x - sNode.x;
+            const controlX = sNode.x + dx * 0.5;
+            const pathData = `M ${sNode.x + 85} ${sNode.y} C ${controlX} ${sNode.y - 30}, ${controlX} ${tNode.y - 30}, ${tNode.x - 85} ${tNode.y}`;
+
+            return (
+              <g key={`raw-edge-${idx}`}>
+                <path
+                  d={pathData}
+                  fill="none"
+                  stroke="#6F7885"
+                  strokeWidth={1.5}
+                  strokeDasharray="none"
+                  markerEnd="url(#topo-arrow-observed)"
+                  opacity="0.6"
+                />
+              </g>
+            );
+          })}
+
+          {/* Attack Movement Vectors (Observed, Current, Forecast Directional Edges) */}
+          {attackVectors.map((vec, idx) => {
+            const sNode = positionedNodeMap.get(vec.source) || findNode(vec.source, positionedNodes);
+            const tNode = positionedNodeMap.get(vec.target) || findNode(vec.target, positionedNodes);
+            if (!sNode || !tNode) return null;
+
+            const isForecast = vec.status === "FORECAST";
+            const isActual = vec.status === "ACTUAL";
+            const isCurrent = vec.status === "CURRENT";
 
             let strokeColor = "#6F7885";
             let strokeDash = "none";
-            let strokeWidth = 2;
+            let strokeWidth = 2.5;
             let marker = "url(#topo-arrow-observed)";
 
             if (isActual) {
               strokeColor = "#4CAF50";
               marker = "url(#topo-arrow-actual)";
-              strokeWidth = 2.5;
+              strokeWidth = 3;
             } else if (isForecast) {
               strokeColor = "#718CB8";
               strokeDash = "6,4";
               marker = "url(#topo-arrow-forecast)";
-              strokeWidth = 2;
+              strokeWidth = 2.5;
             } else if (isCurrent) {
               strokeColor = "#6F8FBE";
               marker = "url(#topo-arrow-current)";
-              strokeWidth = 2.5;
+              strokeWidth = 3;
             }
 
             const dx = tNode.x - sNode.x;
-            const controlX1 = sNode.x + dx * 0.5;
-            const controlY1 = sNode.y;
-            const controlX2 = sNode.x + dx * 0.5;
-            const controlY2 = tNode.y;
+            const controlX = sNode.x + dx * 0.5;
+            const pathData = `M ${sNode.x + 90} ${sNode.y} C ${controlX} ${sNode.y}, ${controlX} ${tNode.y}, ${tNode.x - 90} ${tNode.y}`;
 
-            const pathData = `M ${sNode.x + 85} ${sNode.y} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${tNode.x - 85} ${tNode.y}`;
+            const midX = (sNode.x + tNode.x) / 2;
+            const midY = (sNode.y + tNode.y) / 2;
 
             return (
-              <g key={`topo-edge-${idx}`}>
+              <g key={`attack-vec-${idx}`}>
                 <path
                   d={pathData}
                   fill="none"
@@ -280,9 +318,34 @@ export default function TopologyMap({ topology, onSelectHost }) {
                   strokeWidth={strokeWidth}
                   strokeDasharray={strokeDash}
                   markerEnd={marker}
-                  opacity="0.85"
                   className="transition-all duration-300"
                 />
+
+                {/* Midpoint Vector Label */}
+                <g transform={`translate(${midX - 55}, ${midY - 14})`}>
+                  <rect
+                    x="0"
+                    y="0"
+                    width="110"
+                    height="20"
+                    rx="4"
+                    fill="#0D1015"
+                    stroke={strokeColor}
+                    strokeWidth="1"
+                    strokeDasharray={strokeDash}
+                  />
+                  <text
+                    x="55"
+                    y="13"
+                    textAnchor="middle"
+                    fill={strokeColor}
+                    fontSize="9"
+                    fontWeight="bold"
+                    fontFamily="monospace"
+                  >
+                    {isForecast ? `FORECAST (${vec.relativeTime || "+10s"})` : (vec.stage || "ATTACK VECTOR")}
+                  </text>
+                </g>
               </g>
             );
           })}
@@ -290,8 +353,8 @@ export default function TopologyMap({ topology, onSelectHost }) {
           {/* Node SVG Cards */}
           {positionedNodes.map((node) => {
             const isSelected = selectedNode?.id === node.id;
-            const nodeWidth = 180;
-            const nodeHeight = 74;
+            const nodeWidth = 175;
+            const nodeHeight = 72;
             const nodeX = node.x - nodeWidth / 2;
             const nodeY = node.y - nodeHeight / 2;
 
@@ -337,7 +400,7 @@ export default function TopologyMap({ topology, onSelectHost }) {
                 className="cursor-pointer group"
                 filter={isGlowing || isSelected ? "url(#nodeGlow)" : undefined}
               >
-                {/* Outer Rect Border */}
+                {/* Outer Rect */}
                 <rect
                   x="0"
                   y="0"
@@ -351,19 +414,19 @@ export default function TopologyMap({ topology, onSelectHost }) {
                   className="transition-all duration-200 group-hover:stroke-[#6F8FBE]"
                 />
 
-                {/* Host Label Header */}
+                {/* Host Label */}
                 <text x="12" y="20" fill={textColor} fontSize="11" fontWeight="bold" fontFamily="monospace">
-                  {node.label || node.id}
+                  {node.label || `Host-${node.ip || node.id}`}
                 </text>
 
                 {/* IP Address */}
                 <text x="12" y="36" fill="#6F8FBE" fontSize="9.5" fontFamily="monospace">
-                  {node.ip || "10.0.0.1"}
+                  {node.ip || node.id}
                 </text>
 
                 {/* Node Status Badge */}
-                <rect x="10" y="45" width={nodeWidth - 20} height="18" rx="4" fill={badgeBg} />
-                <text x="16" y="57" fill={badgeText} fontSize="8.5" fontWeight="bold" fontFamily="monospace">
+                <rect x="10" y="44" width={nodeWidth - 20} height="18" rx="4" fill={badgeBg} />
+                <text x="16" y="56" fill={badgeText} fontSize="8.5" fontWeight="bold" fontFamily="monospace">
                   {status.toUpperCase()}
                 </text>
               </g>
@@ -372,19 +435,18 @@ export default function TopologyMap({ topology, onSelectHost }) {
         </svg>
       </div>
 
-      {/* 4. Selected Host Detail Panel */}
+      {/* 4. Selected Host Inspection Panel */}
       {selectedNode && (
         <div className="mt-4 p-4 bg-[#0D1015] border border-[#2A323C] rounded-lg text-xs font-mono text-[#E7EAF0] flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-[#E7EAF0]">{selectedNode.label}</span>
-              <span className="text-[#6F8FBE] font-bold">({selectedNode.ip})</span>
+              <span className="font-bold text-sm text-[#E7EAF0]">{selectedNode.label || selectedNode.id}</span>
+              <span className="text-[#6F8FBE] font-bold">({selectedNode.ip || selectedNode.id})</span>
               <StatusBadge status={selectedNode.status?.toUpperCase() || "CLEAN"} size="sm" />
             </div>
             <div className="text-[11px] text-[#9BA4B0] mt-1 flex items-center gap-3">
               <span>Zone: <strong className="text-[#E7EAF0]">{selectedNode.zone || "INTERNAL"}</strong></span>
-              <span>Active Connections: <strong className="text-[#E7EAF0]">{selectedNode.connections || 12}</strong></span>
-              <span>New Flow Edges: <strong className="text-[#6F8FBE]">{selectedNode.newEdges || 2}</strong></span>
+              <span>Monitored Status: <strong className="text-[#6F8FBE]">{selectedNode.status || "Active"}</strong></span>
             </div>
           </div>
 

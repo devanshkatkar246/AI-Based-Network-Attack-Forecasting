@@ -4,6 +4,21 @@ from .scenarios import get_or_create_orchestrator
 
 router = APIRouter()
 
+@router.get("/network-state")
+def get_network_state_root(
+    scenario_id: str = Query("enterprise-lateral-movement-01"),
+    tick: int = Query(0, ge=0)
+):
+    orch = get_or_create_orchestrator(scenario_id)
+    canonical_state = orch.get_canonical_scenario_state(tick_index=tick)
+    if "error" in canonical_state:
+        raise HTTPException(status_code=404, detail=canonical_state["error"])
+    return canonical_state.get("currentState")
+
+@router.get("/scenarios/{scenario_id}/network-state")
+def get_scenario_network_state(scenario_id: str, tick: int = Query(0, ge=0)):
+    return get_network_state_root(scenario_id=scenario_id, tick=tick)
+
 @router.get("/scenarios/{scenario_id}/timeline")
 def get_scenario_timeline(scenario_id: str):
     orch = get_or_create_orchestrator(scenario_id)
@@ -23,12 +38,6 @@ def get_scenario_timeline(scenario_id: str):
         "timestamps": timestamps
     }
 
-@router.get("/scenarios/{scenario_id}/network-state")
-def get_scenario_network_state(scenario_id: str, tick: int = Query(0, ge=0)):
-    orch = get_or_create_orchestrator(scenario_id)
-    res = orch.get_replay_state(tick_index=tick)
-    return res.get("current_state")
-
 @router.get("/scenarios/{scenario_id}/topology")
 def get_scenario_topology(scenario_id: str, tick: int = Query(0, ge=0)):
     orch = get_or_create_orchestrator(scenario_id)
@@ -44,10 +53,9 @@ def get_scenario_topology(scenario_id: str, tick: int = Query(0, ge=0)):
         "timestamp": cur_state.timestamp
     }
 
-# Legacy routes
 @router.get("/network/state")
 def legacy_get_network_state(scenario_id: str = "enterprise-lateral-movement-01", tick: int = Query(0, ge=0)):
-    return get_scenario_network_state(scenario_id=scenario_id, tick=tick)
+    return get_network_state_root(scenario_id=scenario_id, tick=tick)
 
 @router.get("/network/history")
 def legacy_get_network_history(scenario_id: str = "enterprise-lateral-movement-01", tick: int = Query(0, ge=0)):

@@ -84,15 +84,22 @@ class TrajectoryStep(BaseModel):
     stage: str
     techniqueId: Optional[str] = None
     techniqueName: Optional[str] = None
-    status: str  # "OBSERVED", "CURRENT", "FORECAST", "ACTUAL", "PENDING"
+    status: str  # "OBSERVED", "CURRENT", "FORECAST", "ACTUAL"
     semanticState: str  # "observed", "current", "forecast", "actual"
     timestamp: Optional[str] = None
+    relativeTimeSeconds: Optional[float] = None
+    relativeTimeDisplay: Optional[str] = None
     estimatedTime: Optional[str] = None
-    sourceHost: str
-    targetHost: str
-    details: str
+    sourceHost: str = "Monitored Subnet"
+    targetHost: str = "Target Subnet"
+    sourceAsset: Optional[str] = None
+    targetAsset: Optional[str] = None
+    details: Optional[str] = None
+    description: Optional[str] = None
     confidence: Optional[float] = None
+    isForecast: bool = False
     isCurrent: bool = False
+
 
 class EvidenceSignal(BaseModel):
     id: str
@@ -115,6 +122,7 @@ class WhatIfRequest(BaseModel):
     scenario_id: str
     intervention: str  # e.g., "isolate_host", "revoke_credentials", "block_port"
     host: str
+    tick: Optional[int] = 0
 
 class WhatIfStep(BaseModel):
     stage: str
@@ -137,3 +145,35 @@ class WhatIfResponse(BaseModel):
     interventionTrajectory: List[WhatIfStep]
     riskComparison: List[RiskComparisonItem]
     simulatedDivergenceNotice: str = "Simulated / modelled projection (Phase 1)"
+
+class WarningState(BaseModel):
+    available: bool = False
+    leadTimeSeconds: Optional[float] = None
+    status: str = "none"
+    horizonLabel: str = "Lead Time Unavailable"
+    predictedBehavior: Optional[str] = None
+    predictedTechnique: Optional[str] = None
+    targetAsset: Optional[str] = None
+    recommendedAction: Optional[str] = None
+    confidenceScore: Optional[float] = None
+    threatLevel: str = "LOW"
+    isResolved: bool = False
+
+class ScenarioState(BaseModel):
+    scenarioId: str
+    scenarioName: str
+    category: str = "BENCHMARK SCENARIO"
+    datasetMetadata: Dict[str, Any] = Field(default_factory=dict)
+    timeline: Dict[str, Any] = Field(default_factory=dict)
+    replayPosition: int = 0
+    currentState: NetworkState
+    forecast: Dict[str, Any] = Field(default_factory=dict)
+    forecastTrajectory: List[TrajectoryStep] = Field(default_factory=list)
+    warning: WarningState
+    topology: TopologyState
+    evidence: List[EvidenceSignal] = Field(default_factory=list)
+    mitreInterpretation: List[MitreTechnique] = Field(default_factory=list)
+    evaluation: Optional[Dict[str, Any]] = None
+    whatIf: Optional[WhatIfResponse] = None
+    threatSummary: Optional[Dict[str, Any]] = None
+

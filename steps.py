@@ -28,11 +28,12 @@ def main():
         print(">>> Backend dependencies installed successfully.")
 
     # 2. Check Node Modules
-    node_modules_dir = os.path.join(base_dir, "node_modules")
+    frontend_dir = os.path.join(base_dir, "frontend")
+    node_modules_dir = os.path.join(frontend_dir, "node_modules")
     if not os.path.exists(node_modules_dir):
         print(">>> Installing frontend dependencies via npm install ...")
         npm_bin = "npm.cmd" if is_win else "npm"
-        subprocess.run([npm_bin, "install"], cwd=base_dir, check=True)
+        subprocess.run([npm_bin, "install"], cwd=frontend_dir, check=True)
         print(">>> Frontend dependencies installed successfully.")
 
     # 3. Start FastAPI Backend Process
@@ -43,7 +44,7 @@ def main():
     # 4. Start Next.js Frontend Process
     print(">>> Launching Next.js Frontend on http://localhost:3000 ...")
     npm_bin = "npm.cmd" if is_win else "npm"
-    frontend_process = subprocess.Popen([npm_bin, "run", "dev"], cwd=base_dir)
+    frontend_process = subprocess.Popen([npm_bin, "run", "dev"], cwd=frontend_dir)
 
     # 5. Wait for servers to initialize and open browser
     print(">>> Waiting 4 seconds for servers to start...")

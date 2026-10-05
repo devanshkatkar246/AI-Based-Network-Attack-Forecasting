@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 
+import { formatRelativeTime } from "@/lib/temporalUtils";
+
 export default function ForecastTrajectoryHero({ trajectory, selectedHorizon }) {
   const [activeNode, setActiveNode] = useState(null);
 
@@ -16,7 +18,7 @@ export default function ForecastTrajectoryHero({ trajectory, selectedHorizon }) 
             ATTACK TRAJECTORY
           </h2>
           <p className="text-xs text-[#9AA6B2] mt-0.5">
-            Observed Past → Current State → Forecast Horizons
+            Observed Past → Current State (NOW) → Forecast Horizons
           </p>
         </div>
 
@@ -42,23 +44,30 @@ export default function ForecastTrajectoryHero({ trajectory, selectedHorizon }) 
         <div className="flex items-center gap-3 min-w-[760px] px-1">
           {trajectory.map((node, idx) => {
             const isObserved = node.status === "OBSERVED";
-            const isForecast = node.status === "FORECAST";
+            const isForecast = node.status === "FORECAST" || node.isForecast;
             const isActual = node.status === "ACTUAL";
             const isCurrent = node.isCurrent || node.status === "CURRENT";
             const isSelected = activeNode?.id === node.id;
-            const normHorizon = selectedHorizon?.replace("+", "").replace("s", "");
-            const isHighlightedHorizon = isForecast && node.estimatedTime?.includes(normHorizon);
+            const normHorizon = selectedHorizon ? selectedHorizon.replace("+", "").replace("s", "") : "";
+            const isHighlightedHorizon = isForecast && (
+              node.relativeTimeDisplay?.includes(normHorizon) ||
+              node.estimatedTime?.includes(normHorizon)
+            );
 
             const timeLabel = isCurrent
               ? "NOW"
+              : node.relativeTimeDisplay || formatRelativeTime(node.relativeTimeSeconds);
+
+            const statusLabel = isCurrent
+              ? "CURRENT"
               : isActual
-              ? node.timestamp || `+${(idx - 2) * 30}s`
+              ? "ACTUAL"
               : isForecast
-              ? node.estimatedTime || "+30s"
-              : node.timestamp || `T-${(2 - idx) * 30}s`;
+              ? "FORECAST"
+              : "OBSERVED";
 
             return (
-              <React.Fragment key={node.id}>
+              <React.Fragment key={node.id || `node-${idx}`}>
                 {/* Node Box */}
                 <div
                   onClick={() => setActiveNode(isSelected ? null : node)}
@@ -70,7 +79,7 @@ export default function ForecastTrajectoryHero({ trajectory, selectedHorizon }) 
                       : isHighlightedHorizon
                       ? "bg-[#1E2632] border-2 border-dashed border-[#6F95D6] shadow-card ring-2 ring-[#6F95D6]/20 scale-[1.02]"
                       : isForecast
-                      ? "bg-[#11161D] border-2 border-dashed border-[#6F95D6]/40 hover:border-[#6F95D6]"
+                      ? "bg-[#11161D] border-2 border-dashed border-[#6F95D6]/50 hover:border-[#6F95D6]"
                       : "bg-[#11161D] border border-[#27303A] hover:border-[#364250]"
                   } ${isSelected ? "ring-2 ring-[#E8EDF3]" : ""}`}
                 >
@@ -91,7 +100,7 @@ export default function ForecastTrajectoryHero({ trajectory, selectedHorizon }) 
                         : "text-[#E8EDF3] font-semibold"
                     }`}
                   >
-                    {node.techniqueName}
+                    {node.techniqueName || node.stage}
                   </div>
 
                   {/* Time & State */}
@@ -107,7 +116,7 @@ export default function ForecastTrajectoryHero({ trajectory, selectedHorizon }) 
                           : "bg-[#19202A] text-[#9AA6B2]"
                       }`}
                     >
-                      {isCurrent ? "CURRENT" : isActual ? "ACTUAL" : isForecast ? "FORECAST" : "OBSERVED"}
+                      {statusLabel}
                     </span>
 
                     <span

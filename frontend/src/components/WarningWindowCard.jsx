@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Sparkles, ArrowRight, AlertTriangle } from "lucide-react";
+import { Sparkles, ArrowRight, AlertTriangle, ShieldCheck, Clock } from "lucide-react";
 import Link from "next/link";
-import { useReplay, REPLAY_STATES } from "@/context/ReplayContext";
+import { useReplay } from "@/context/ReplayContext";
 
 export default function WarningWindowCard({ warningWindow }) {
-  const { replayState, isFrozenAtCurrent, revealFuture } = useReplay();
+  const { isFrozenAtCurrent, revealFuture } = useReplay();
 
   const initialLeadTime = warningWindow?.leadTimeSeconds ?? warningWindow?.timeRemainingSec;
   const [timeLeft, setTimeLeft] = useState(initialLeadTime);
@@ -18,8 +18,45 @@ export default function WarningWindowCard({ warningWindow }) {
     }
   }, [warningWindow]);
 
-  // Handle UNAVAILABLE warning lead time
-  if (!warningWindow || initialLeadTime === null || initialLeadTime === undefined) {
+  const status = warningWindow?.status || "NO_FORECAST";
+  const predictedEvent = warningWindow?.predictedBehavior || "Lateral Movement";
+  const recommendedAction = warningWindow?.recommendedAction || "Investigate / isolate suspicious host";
+  const targetAsset = warningWindow?.targetAsset || "Monitored Subnet";
+  const isResolved = warningWindow?.isResolved || status === "RESOLVED" || status === "WARNING_RESOLVED";
+
+  // 1. Resolved State
+  if (isResolved) {
+    return (
+      <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between select-none">
+        <div className="flex items-center justify-between pb-3 border-b border-[#27303A]">
+          <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-[#9AA6B2]">
+            EARLY WARNING
+          </h2>
+          <span className="font-mono text-[10px] font-bold text-[#659477] bg-[#1C2620] border border-[#659477]/30 px-2 py-0.5 rounded">
+            WARNING RESOLVED
+          </span>
+        </div>
+
+        <div className="my-3 p-3.5 bg-[#1C2620] border border-[#659477]/40 rounded-lg flex items-start gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-[#659477] shrink-0 mt-0.5" />
+          <div className="text-xs text-[#9AA6B2] space-y-1">
+            <div className="font-bold text-[#E8EDF3]">WARNING RESOLVED</div>
+            <p className="text-[11px] text-[#A7B0BC]">
+              Projected event <strong className="text-[#659477]">{predictedEvent}</strong> has entered observed ground truth.
+            </p>
+          </div>
+        </div>
+
+        <div className="pt-3 border-t border-[#27303A] text-[10px] font-mono text-[#9AA6B2] flex items-center justify-between">
+          <span>Target: {targetAsset}</span>
+          <span className="text-[#659477] font-bold">Outcome Confirmed</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. No Forecast / Standby State
+  if (status === "NO_FORECAST" || !warningWindow || initialLeadTime === null || initialLeadTime === undefined) {
     return (
       <div className="bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between select-none">
         <div className="flex items-center justify-between pb-3 border-b border-[#27303A]">
@@ -30,26 +67,24 @@ export default function WarningWindowCard({ warningWindow }) {
         </div>
 
         <div className="my-4 p-3.5 bg-[#19202A] border border-[#27303A] rounded-lg flex items-start gap-2.5">
-          <AlertTriangle className="w-4 h-4 text-[#6C7987] shrink-0 mt-0.5" />
+          <Clock className="w-4 h-4 text-[#6C7987] shrink-0 mt-0.5" />
           <div className="text-xs text-[#9AA6B2] space-y-1">
-            <div className="font-bold text-[#E8EDF3]">WARNING LEAD TIME</div>
-            <div className="text-sm font-bold text-[#6C7987]">Not available</div>
+            <div className="font-bold text-[#E8EDF3]">EARLY WARNING</div>
+            <div className="text-sm font-semibold text-[#6C7987]">No actionable forecast available</div>
             <p className="text-[11px] text-[#6C7987] mt-1">
-              Reason: Insufficient ground truth / model output in current temporal state window.
+              {warningWindow?.rationale || "Continuous temporal flow monitoring active."}
             </p>
           </div>
         </div>
 
         <div className="pt-3 border-t border-[#27303A] text-[10px] font-mono text-[#6C7987]">
-          Target asset: {warningWindow?.targetAsset || "Monitored Subnet"}
+          Target asset: {targetAsset}
         </div>
       </div>
     );
   }
 
-  const predictedEvent = warningWindow.predictedBehavior || "Lateral Movement";
-  const recommendedAction = warningWindow.recommendedAction || "Investigate / isolate suspicious host";
-
+  // 3. Active Warning Window
   return (
     <div
       className={`bg-[#151B23] border border-[#27303A] rounded-xl p-5 shadow-card h-full flex flex-col justify-between transition-all select-none ${
@@ -62,7 +97,7 @@ export default function WarningWindowCard({ warningWindow }) {
           EARLY WARNING
         </h2>
         <span className="font-mono text-[10px] font-bold text-[#C59A45] bg-[#2A2318] border border-[#C59A45]/30 px-2 py-0.5 rounded">
-          {warningWindow.horizonLabel || `${timeLeft} sec Horizon`}
+          {warningWindow.horizonLabel || `~${timeLeft}s LEAD TIME`}
         </span>
       </div>
 
@@ -76,7 +111,10 @@ export default function WarningWindowCard({ warningWindow }) {
           estimated warning lead time
         </div>
         <div className="text-xs text-[#E8EDF3] mt-2.5 font-medium">
-          Predicted event: <strong className="text-[#6F95D6] font-semibold">{predictedEvent}</strong>
+          Projected transition: <strong className="text-[#6F95D6] font-semibold">{predictedEvent}</strong>
+        </div>
+        <div className="text-[11px] text-[#9AA6B2] mt-1 font-mono">
+          Target: <span className="text-[#E8EDF3]">{targetAsset}</span>
         </div>
       </div>
 
@@ -106,6 +144,3 @@ export default function WarningWindowCard({ warningWindow }) {
     </div>
   );
 }
-
-
-

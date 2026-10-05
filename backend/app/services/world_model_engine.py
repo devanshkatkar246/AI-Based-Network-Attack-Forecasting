@@ -159,11 +159,17 @@ class TemporalWorldModelEngine(ForecastEngine):
                 status="OBSERVED",
                 semanticState="observed",
                 timestamp=st.timestamp,
+                relativeTimeSeconds=float(-t_sec),
+                relativeTimeDisplay=t_str,
                 estimatedTime=t_str,
                 sourceHost=src_host_str,
                 targetHost="Monitored Subnet",
+                sourceAsset=src_host_str,
+                targetAsset="Monitored Subnet",
                 details=f"Empirically observed traffic window {t_str}",
+                description=f"Empirically observed traffic window {t_str}",
                 confidence=1.0,
+                isForecast=False,
                 isCurrent=False
             ))
 
@@ -178,16 +184,23 @@ class TemporalWorldModelEngine(ForecastEngine):
             status="CURRENT",
             semanticState="current",
             timestamp=current_state.timestamp,
+            relativeTimeSeconds=0.0,
+            relativeTimeDisplay="NOW",
             estimatedTime="NOW",
             sourceHost=src_host_str,
             targetHost=dst_host_str,
+            sourceAsset=src_host_str,
+            targetAsset=dst_host_str,
             details=f"Active state in current window (Window ID #{current_state.window_id})",
+            description=f"Active state in current window (Window ID #{current_state.window_id})",
             confidence=0.98,
+            isForecast=False,
             isCurrent=True
         ))
 
         # 3. K-Step Latent Rollout Steps
         horizon = self.config.get("forecast_horizon", 2)
+        predictions = []
         for k in range(horizon):
             pred_class_idx = int(np.argmax(probs[k]))
             prob_val = float(probs[k, pred_class_idx])
@@ -197,18 +210,33 @@ class TemporalWorldModelEngine(ForecastEngine):
             
             h_sec = int((k + 1) * self.window_size_seconds)
 
+            predictions.append({
+                "horizon_seconds": h_sec,
+                "behavior": norm_pred_p.value,
+                "technique_id": tech.technique_id if tech else None,
+                "score": round(prob_val, 2),
+                "probability": round(prob_val, 2)
+            })
+
             trajectory.append(TrajectoryStep(
                 id=f"step-forecast-{k+1}",
                 stage=norm_pred_p.value.title(),
                 techniqueId=tech.technique_id if tech else None,
                 techniqueName=tech.technique_name if tech else "Modelled Transition",
-                status="PENDING",
+                status="FORECAST",
                 semanticState="forecast",
+                timestamp=None,
+                relativeTimeSeconds=float(h_sec),
+                relativeTimeDisplay=f"+{h_sec}s",
                 estimatedTime=f"+{h_sec}s",
                 sourceHost=src_host_str,
                 targetHost=dst_host_str,
+                sourceAsset=src_host_str,
+                targetAsset=dst_host_str,
                 details=f"Model-rolled trajectory step (+{h_sec}s, prob={round(prob_val*100, 1)}%)",
+                description=f"Model-rolled trajectory step (+{h_sec}s, prob={round(prob_val*100, 1)}%)",
                 confidence=round(prob_val, 2),
+                isForecast=True,
                 isCurrent=False
             ))
 
@@ -237,8 +265,12 @@ class TemporalWorldModelEngine(ForecastEngine):
         warning_data = WarningLeadTimeEngine.calculate_lead_time(
             forecast_timestamp_str=current_state.timestamp,
             predicted_behavior=PHASE_CLASSES[int(np.argmax(probs[0]))],
+            predictions=predictions,
             future_state_history=future_state_history or [],
-            window_size_seconds=self.window_size_seconds
+            window_size_seconds=self.window_size_seconds,
+            ground_truth_onset=ground_truth_onset,
+            current_phase=current_state.phase,
+            target_asset=dst_host_str
         )
 
         warning_lead_sec = warning_data.get("lead_time_seconds") if warning_data.get("available") else None
@@ -247,12 +279,13 @@ class TemporalWorldModelEngine(ForecastEngine):
             status="success",
             engine_id="Phase 2 Temporal Network World Model",
             current_behavior=cur_norm_p.value,
-            predicted_behavior=BehaviorTaxonomyService.normalize_behavior(PHASE_CLASSES[int(np.argmax(probs[0]))]).value,
-            predicted_technique="T1021.002",
+            predicted_behavior=warning_data.get("predicted_behavior") or BehaviorTaxonomyService.normalize_behavior(PHASE_CLASSES[int(np.argmax(probs[0]))]).value,
+            predicted_technique=warning_data.get("predicted_technique") or "T1021.002",
             forecast_horizon_seconds=int(self.window_size_seconds),
             warning_lead_time_seconds=warning_lead_sec,
             target_host=dst_host_str,
             trajectory=trajectory,
+
             evidence=evidence,
             uncertainty={"calibrated_confidence": round(float(np.max(probs[0])), 2), "brier_score": 0.088}
         )

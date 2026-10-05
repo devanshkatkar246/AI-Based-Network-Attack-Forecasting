@@ -17,54 +17,61 @@ def get_scenario_forecast(
     horizon_windows: int = Query(3, ge=1)
 ):
     orch = get_or_create_orchestrator(scenario_id)
-    res = orch.get_replay_state(tick_index=tick)
-    cur_state = res.get("current_state")
-    forecast_obj = res.get("forecast")
+    canonical_state = orch.get_canonical_scenario_state(tick_index=tick)
+    if "error" in canonical_state:
+        raise HTTPException(status_code=404, detail=canonical_state["error"])
 
-    if not forecast_obj or getattr(forecast_obj, "status", None) in ["model_not_ready", "insufficient_history"]:
-        status_code = getattr(forecast_obj, "status", "model_not_ready") if forecast_obj else "model_not_ready"
-        msg = getattr(forecast_obj, "message", "Model not ready or insufficient history.") if forecast_obj else "Model not ready."
-        return {
-            "status": status_code,
-            "scenario_id": scenario_id,
-            "tick": tick,
-            "message": msg
-        }
+    cur_state = canonical_state.get("currentState")
+    forecast_obj = canonical_state.get("forecast")
+    trajectory = canonical_state.get("forecastTrajectory", [])
+    warning_info = canonical_state.get("warning", {})
+    evidence = canonical_state.get("evidence", [])
 
-    # Extract clean prediction predictions list matching Section 13 contract
+    # Format horizon predictions
     predictions = []
-    if hasattr(forecast_obj, "trajectory"):
-        for step in forecast_obj.trajectory:
-            if getattr(step, "status", None) == "PENDING" or getattr(step, "semanticState", None) == "forecast":
-                h_str = getattr(step, "estimatedTime", "+10s")
-                try:
-                    h_sec = int(h_str.replace("+", "").replace("s", ""))
-                except Exception:
-                    h_sec = 10
-                predictions.append({
-                    "horizon_seconds": h_sec,
-                    "behavior": getattr(step, "stage", "Unknown"),
-                    "technique_id": getattr(step, "techniqueId", "T1000"),
-                    "score": getattr(step, "confidence", 0.8),
-                    "probability": getattr(step, "confidence", 0.8)
-                })
-
-    warning_info = {
-        "available": forecast_obj.warning_lead_time_seconds is not None,
-        "lead_time_seconds": forecast_obj.warning_lead_time_seconds
-    } if hasattr(forecast_obj, "warning_lead_time_seconds") else {"available": False, "reason": "No lead time available"}
+    for step in trajectory:
+        if step.get("status") in ["PENDING", "FORECAST"] or step.get("semanticState") == "forecast":
+            h_str = step.get("estimatedTime", "+10s")
+            try:
+                h_sec = int(h_str.replace("+", "").replace("s", ""))
+            except Exception:
+                h_sec = 10
+            predictions.append({
+                "horizon_seconds": h_sec,
+                "behavior": step.get("stage", "Unknown"),
+                "technique_id": step.get("techniqueId", "T1046"),
+                "technique_name": step.get("techniqueName", "Network Attack Transition"),
+                "score": step.get("confidence"),
+                "probability": step.get("confidence")
+            })
 
     return {
         "status": "ready",
         "scenario_id": scenario_id,
         "tick": tick,
-        "timestamp": cur_state.timestamp if cur_state else "00:00:00 UTC",
+        "timestamp": cur_state.get("timestamp") if cur_state else "00:00:00 UTC",
         "current_state": cur_state,
         "predictions": predictions,
-        "trajectory": forecast_obj.trajectory if hasattr(forecast_obj, "trajectory") else [],
+        "trajectory": trajectory,
         "warning": warning_info,
-        "evidence": forecast_obj.evidence if hasattr(forecast_obj, "evidence") else []
+        "evidence": evidence
     }
+
+@router.get("/forecast/{scenario_id}")
+def get_forecast_by_id(
+    scenario_id: str,
+    tick: int = Query(0, ge=0),
+    horizon_windows: int = Query(3, ge=1)
+):
+    return get_scenario_forecast(scenario_id=scenario_id, tick=tick, horizon_windows=horizon_windows)
+
+@router.get("/forecast")
+def get_forecast_root(
+    scenario_id: str = Query("enterprise-lateral-movement-01"),
+    tick: int = Query(0, ge=0),
+    horizon_windows: int = Query(3, ge=1)
+):
+    return get_scenario_forecast(scenario_id=scenario_id, tick=tick, horizon_windows=horizon_windows)
 
 @router.post("/scenarios/{scenario_id}/forecast")
 def post_scenario_forecast(
@@ -73,10 +80,6 @@ def post_scenario_forecast(
 ):
     tick = req.tick or 0
     return get_scenario_forecast(scenario_id=scenario_id, tick=tick, horizon_windows=req.horizon_windows or 3)
-
-@router.get("/forecast")
-def legacy_get_forecast(scenario_id: str = "enterprise-lateral-movement-01", tick: int = Query(0, ge=0)):
-    return get_scenario_forecast(scenario_id=scenario_id, tick=tick)
 
 @router.post("/forecast/run")
 def legacy_run_forecast(scenario_id: str = "enterprise-lateral-movement-01", tick: int = Query(0, ge=0)):
