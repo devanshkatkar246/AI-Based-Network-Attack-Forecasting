@@ -1,0 +1,27 @@
+# Version Control
+.git/
+.github/
+.gitignore
+
+# Scratch & Research Artifacts (Large PDFs & Screenshots)
+scratch/
+dataset/
+
+# Virtual Environments & Build Caches
+.venv/
+backend/.venv/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+frontend/.next/
+
+# Test Suites (Not needed in serverless production runtime)
+backend/tests/
+
+# Large Binary & Temp Files
+*.pdf
+*.png
+*.log
+TECHNICAL_AUDIT.md
+steps.py
+start.bat
