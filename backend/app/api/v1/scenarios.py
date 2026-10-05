@@ -1,6 +1,8 @@
 import os
+import re
 import time
 import shutil
+import tempfile
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from typing import Dict, Any, List, Optional
 from ...pipeline.orchestrator import PipelineOrchestrator
@@ -52,8 +54,6 @@ def list_scenarios():
     ]
     return default_scenarios + uploaded_scenarios_meta
 
-
-
 @router.get("/scenarios/{scenario_id}")
 def get_scenario_details(scenario_id: str):
     orch = get_or_create_orchestrator(scenario_id)
@@ -69,40 +69,40 @@ async def upload_scenario_csv(
     file: UploadFile = File(...),
     scenario_name: Optional[str] = Form(None)
 ):
-    if not file.filename.endswith(".csv"):
+    if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Invalid file type. Only CSV network flow telemetry files are supported.")
 
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-    raw_dir = os.path.join(base_dir, "data", "raw")
-    os.makedirs(raw_dir, exist_ok=True)
+    # Sanitize the filename to prevent any path traversal
+    raw_name = os.path.basename(file.filename)
+    safe_name = re.sub(r'[^a-zA-Z0-9_.-]', '_', raw_name)
 
     timestamp_str = int(time.time())
-    safe_filename = f"upload_{timestamp_str}_{file.filename}"
-    file_path = os.path.join(raw_dir, safe_filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    # Ingest and validate CSV content
-    records, raw_cols, invalid_rows = TelemetryIngestionService.load_from_csv(file_path)
-    if len(records) == 0:
-        os.remove(file_path)
-        raise HTTPException(
-            status_code=422,
-            detail="CSV validation failed: Unable to parse valid network telemetry rows. Ensure timestamp, src_ip, and dst_ip columns exist."
-        )
-
     scenario_id = f"uploaded-{timestamp_str}"
-    name_clean = scenario_name.strip() if scenario_name and scenario_name.strip() else file.filename.replace(".csv", "").replace("_", " ").capitalize()
+    name_clean = scenario_name.strip() if scenario_name and scenario_name.strip() else safe_name.replace(".csv", "").replace("_", " ").capitalize()
 
-    orch = PipelineOrchestrator(scenario_id=scenario_id)
-    orch.load_and_process_scenario(file_path=file_path)
-    orchestrator_store[scenario_id] = orch
+    # Use secure temporary directory in OS temp space (/tmp on Linux/Vercel)
+    with tempfile.TemporaryDirectory(prefix="forecaster_upload_") as tmpdir:
+        temp_csv_path = os.path.join(tmpdir, f"upload_{timestamp_str}.csv")
+
+        with open(temp_csv_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Ingest and validate CSV content
+        records, raw_cols, invalid_rows = TelemetryIngestionService.load_from_csv(temp_csv_path)
+        if len(records) == 0:
+            raise HTTPException(
+                status_code=422,
+                detail="CSV validation failed: Unable to parse valid network telemetry rows. Ensure timestamp, src_ip, and dst_ip columns exist."
+            )
+
+        orch = PipelineOrchestrator(scenario_id=scenario_id)
+        orch.load_and_process_scenario(file_path=temp_csv_path)
+        orchestrator_store[scenario_id] = orch
 
     meta_entry = {
         "id": scenario_id,
         "name": f"{name_clean} (Uploaded)",
-        "source_dataset": safe_filename,
+        "source_dataset": safe_name,
         "description": f"Uploaded telemetry CSV ({len(records)} flow records, {len(orch.windows)} temporal windows).",
         "status": "ready",
         "category": "USER UPLOADED",
@@ -117,7 +117,7 @@ async def upload_scenario_csv(
         "status": "validated",
         "scenario_id": scenario_id,
         "scenario_name": name_clean,
-        "filename": file.filename,
+        "filename": safe_name,
         "rows": len(records),
         "columns": raw_cols,
         "time_range": {
@@ -141,5 +141,4 @@ def load_scenario(scenario_id: str):
 @router.get("/scenarios/{scenario_id}/replay")
 def scenario_replay(scenario_id: str, tick: int = Query(0, ge=0)):
     orch = get_or_create_orchestrator(scenario_id)
-    res = orch.get_replay_state(tick_index=tick)
-    return res
+    return orch.get_replay_state(tick_index=tick)
